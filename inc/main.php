@@ -112,11 +112,16 @@ class wacimportcsv{
                     //[language][taxo][id col] = data
                     $id_data[0] = str_replace('taxo_','', $id_data[0]);
                     $to_save_data[$id_data[1]]['taxonomie'][$id_data[0]] = $data;
+                    
+                }elseif(preg_match('#subt_#', $id_data[0])){
+                    //[language][taxo][id col] = data
+                    $id_data[0] = str_replace('subt_','', $id_data[0]);
+                    $to_save_data[$id_data[1]]['subtaxonomie'][$id_data[0]] = $data;
+                    
                 }else{
                     //[language][id col] = data
                     $to_save_data[$id_data[1]][$id_data[0]] = $data;
-                }
-                
+                } 
             }
             
             /* get urls */
@@ -246,11 +251,20 @@ class wacimportcsv{
                 continue;
             }
             
+            $data_taxonomy = get_taxonomy($taxo_assoc);
+
+            
 //TODO SECURIT21 SI PAS PPL            
             //get the default
-            $default_ppl = pll_default_language();
-            
-            $html.= '<tr>';
+            if($color_set){
+                $color_set = 0;
+                $color = 'background-color: '.$color_background.';';
+            }else{
+                $color_set = 1;
+                $color = '';
+            }
+            //LINE -------------------------
+            $html.= '<tr style="'.$color.'">';
             
                 //TITLE COL --------------------------
                 $html.= '<td>';
@@ -261,23 +275,43 @@ class wacimportcsv{
             
             //COL BY LANGUAGE --------------------
             foreach($_ppl_slugs as $keyppl=>$ppl_name){
-                //PRINT COL ONLY FOR THE DEFAULT LANGUAGE !!!!!!!!!!!!!
-                if($ppl_name == $default_ppl){
+
+                $html.= '<td>';
+                $default_value = "notselected";
+                if($association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc] !== null){
+                   $default_value = $association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc]; 
+                }
+                $html.= $this->create_select_form($titles, "taxo_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
+                $html.= '</td>';
+            }
+            $html.= '</tr>'; 
+            
+            
+            if(isset($data_taxonomy->hierarchical) && $data_taxonomy->hierarchical==1){
+            
+                $html.= '<tr style="'.$color.'">'; 
+                //TITLE COL --------------------------
+                $html.= '<td>';
+                    $html.= '<span style="width: 250px;display: inline-block;">';
+                        $html.= 'SOUS TAXO : '.$taxo_assoc;
+                    $html.= '</span>';
+                $html.= '</td>';
+                
+                foreach($_ppl_slugs as $keyppl=>$ppl_name){
+                    //create sous rubrique
                     $html.= '<td>';
                     $default_value = "notselected";
-                    if($association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc] !== null){
-                       $default_value = $association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc]; 
+                    if($association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc] !== null){
+                       $default_value = $association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc]; 
                     }
-                    $html.= $this->create_select_form($titles, "taxo_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
-                    $html.= '</td>';
-                }else{
-                    $html.= '<td>';
-                    $html.= '</td>';
+                    $html.= $this->create_select_form($titles, "subt_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
+                    $html.= '</td>';  
                 }
+                
+                $html.= '</tr>'; 
             }
-            $html.= '</tr>';
-             
             
+                       
         }
               
         /////////////////
@@ -412,6 +446,7 @@ class wacimportcsv{
         $ajout_post = 0;
         $delete_post = 0;
         //parse csvlines if no $this->_wacmetakey exist, create post
+        $message_lines = array();
         foreach($values as $line){
                         
             if($id_postmeta != "notselected"){
@@ -425,7 +460,7 @@ class wacimportcsv{
                 continue;
             }else{
                 unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
-                $this->create_post($line,$list_decoded,$key,$unique_id_value);
+                $message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value);
                 $ajout_post++;
             }
             
@@ -446,13 +481,29 @@ class wacimportcsv{
         }//end if trash
         
         $this->_message_post_process = $ajout_post.' ont été ajoutés.<br>'.$delete_post.' ont été supprimés.';
+        
+        //mail
+        $user_meta = get_userdata(get_current_user_id());
+        $to = $user_meta->user_email;
+        $subject = "Informations sur l'import du ".date('d-m-Y H:i:s');
+        
+        $message = $ajout_post.' ont été ajoutés.<br>';
+        $message.= $delete_post.' ont été supprimés.<br>';
+        foreach($message_lines as $idpostml=>$ml){
+            $url = get_edit_post_link($idpostml);
+            $message.= "Pour le post : ".get_the_title($idpostml)." <a href='".$url."'>$url</a><br>";
+            $message.= implode('',$ml);
+        }        
+        $t = wp_mail($to,$subject,$message);
     }
     
     public function create_post($line,$list_decoded,$key,$unique_id_value){   
                 
+        $message = array();
         $association_list_language = $list_decoded[$key]['association'];
                 
         //loop for language
+        $list_assoc_language = array();
         foreach($association_list_language as $language_slug=>$association_list){
         
             $data = array();
@@ -489,6 +540,9 @@ class wacimportcsv{
                 //set language if there is one;
                 if($language_slug !== 0){
                     pll_set_post_language($new_post_id, $language_slug);
+                    
+                    //array to save later to associate posts between them
+                    $list_assoc_language[$language_slug] = $new_post_id;
                 }
                 
                 $category_slug = $line[$association_list['post_category']];
@@ -501,21 +555,52 @@ class wacimportcsv{
                 /* add the postmeta of unique csv id */
                 update_post_meta( $new_post_id, $this->_wacmetakey, $unique_id_value);
 
-                //TAXOS
-                
-//TODO NE PAS OULIER QUE CE NEST QUE POUR LA LANGUE PAR DEAFULT
-                
+                //TAXOS                
                 foreach($association_list['taxonomie'] as $key_taxo=>$taxo_value){
-                    $term_data = get_term_by('slug',$line[$taxo_value],$key_taxo);              
-                    $returnTERm = wp_set_post_terms( $new_post_id,$term_data->term_id , $key_taxo);
+                    $list_terms = array();
+                    
+                    if($line[$taxo_value] && $line[$taxo_value]!=""){
+                        $term_data = get_term_by('name',$line[$taxo_value],$key_taxo);
+                        if(isset($term_data->term_id)){
+                            $list_terms[] = $term_data->term_id;
+                        }else{
+                            //$list_terms[] = $line[$taxo_value];
+                            $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$taxo_value]." n'as pas été trouvé<br>";
+                        }
+                    }
+                    
+                    if(isset($association_list['subtaxonomie'][$key_taxo])){
+                        
+                        $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
+                        if($subtaxo_value && $subtaxo_value!="" && $line[$subtaxo_value]!=""){
+                            $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
+                            if($subterm_data->term_id){
+                                $list_terms[] = $subterm_data->term_id;
+                            }else{
+                                //$list_terms[] = $line[$subtaxo_value];
+                                //
+                                $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
+                            }
+                        }
+                        
+                    }    
+                                               
+                    //wp_set_object_terms( $new_post_id,$list_terms, $key_taxo,true); //create is doesn't exit NEED TO UNCOMENT THE LINES BEFORE
+                    $returnTerm = wp_set_post_terms( $new_post_id,$list_terms , $key_taxo,true); ///do not create if does not exit
                 }
-                
+                          
                 //update acfs
                 foreach($list_acf as $acf_key=>$acf_value){
                     update_field($acf_key, $acf_value, $new_post_id);
                 }
-            }//end if
+            }//end if new post
+            
         }//end foreach language
+        
+        //after loop associate all posts between them
+        pll_save_post_translations($list_assoc_language);
+        
+        return $message;
     }
     
     public function insert_post($data){
