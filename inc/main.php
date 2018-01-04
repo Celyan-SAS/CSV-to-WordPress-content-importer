@@ -409,8 +409,8 @@ class wacimportcsv{
     }
     
     public function importcsv_menu(){
-        $page_title = 'W&C Import CSV Options';
-        $menu_title = 'W&C Import CSV Options';
+        $page_title = 'CSV to WP';
+        $menu_title = 'CSV to WP';
         $capability = 'manage_options';
         $menu_slug = 'wacimportcsvoptions';
         $function = array($this, 'wacimportcsvoptions_main_menu_options');
@@ -655,20 +655,28 @@ class wacimportcsv{
     public function wacimportcsvoptions_main_menu_options() {
                 
         echo '<div class="wrap">';
-        echo '<h2>'.__('W&Co IMPORT','yd_import_csv').'</h2>';
+        echo '<h2>'.__('Import depuis fichier CSV','yd_import_csv').'</h2>';
         
         /** LIST URLS **/
         echo '<hr>';
         echo '<div id="messagepostprocess">'.$this->_message_post_process.'</div>';
-        echo '<h2>Liste Sauvegardes</h2>';
+        echo '<h2>Modèles d\'importation</h2>';
         $list_urls = get_option($this->_list_save_name,false);        
         $list_decoded = array();
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
-            echo '<ul>';
+            echo '<table>';
+                echo '<thead>';
+                    echo '<tr>';
+                        echo '<th>Nom</th>';
+                        echo '<th>Type de contenu</th>';
+                        echo '<th>Action</th>';
+                    echo '</tr>';
+                echo '</thead>';
+            echo '<tr>';
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
-                echo '<li id="wac_'.$key_ls.'">';
+                echo '<td id="wac_'.$key_ls.'">';
                     
                 echo '<input type="button" value="Delete" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
                 echo '<input type="button" value="Edit" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
@@ -684,10 +692,11 @@ class wacimportcsv{
                 echo '</form>';
 
                     
-                echo '</li>';
+                echo '</td>';
                 $count_line_save++;
             }
-            echo '</ul>';
+            echo '</tr>';
+            echo '</table>';
         }
 
         echo '<div id="html_admin_assoc_cpt">';
@@ -695,34 +704,34 @@ class wacimportcsv{
         echo '</div>';
         
         echo '<hr>';
-        echo '<h2>Nouvelle Sauvegarde</h2>';
+        echo '<h2>Nouveau modèle d\'importation</h2>';
         /** form to ad url **/
         echo '<form action="" method="POST" enctype="multipart/form-data">';
         
             /** NAME **/
             echo '<div>';
-                echo 'Nom de la sauvegarde<br>';
+                echo 'Nom du modèle<br>';
                 echo '<input type="text" name="namesauvegarde" >';
             echo '</div>';            
         
             /** STARTING LINE **/
             echo '<div>';
-                echo 'Numéro de ligne des TITRES des colonnes (0 est la premiere)<br>';
-                echo '<input type="text" name="startline" value="0" >';
+                echo 'N° de la ligne contenant le nom des colonnes<br>';
+                echo '<input type="text" name="startline" value="1" >';
             echo '</div>';
             
             /** TYPE ACTION POUR ABSENT **/
             echo '<div>';
-                echo 'Action a entreprendre quand une ligne a été delete du fichier (ignorer ou supprimer le post liée a cette ligne)<br>';
+                echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:<br>';
                 echo '<select name="actionligneabsente">';
-                echo '<option value="ignorerpost">Ignorer le post</option>';
-                    echo '<option value="deletepost">Supprimer le post</option>';
+                echo '<option value="ignorerpost">Conserver le contenu existant</option>';
+                    echo '<option value="deletepost">Supprimer le contenu existant</option>';
                 echo '</select>';
             echo '</div>'; 
             
             /** TYPE separateur **/
             echo '<div>';
-                echo 'Type de séparateur<br>';
+                echo 'Séparateur de champ<br>';
                 echo '<input type="text" name="separatortype" value="," >';
             echo '</div>';             
             
@@ -731,9 +740,9 @@ class wacimportcsv{
             $args_cpt = array('public'   => true);
             $list_cpt = get_post_types($args_cpt);
             echo '<div>';
-                echo '<div>'.__('Select CPT : ',',importcsv').'</div>';
+                echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
                 echo '<select name="cptsave" style="width:150px;">';
-                echo '<option value="">'.__('Select a CPT ',',importcsv').'</option>';
+                echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
                 foreach($list_cpt as $cpt_code=>$cpt_name){
                     $selected = '';
                     if($cpt_code == $cptlinked){
@@ -750,9 +759,9 @@ class wacimportcsv{
              ); 
             $all_users = get_users( $args_users );
             echo '<div>';
-                echo '<div>'.__('Select Author : ',',importcsv').'</div>';
+                echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
                 echo '<select name="authorsave" style="width:150px;">';
-                echo '<option value="">'.__('Select Author ',',importcsv').'</option>';
+                echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
                 foreach($all_users as $user){
                     $selected = '';
                     if($user->ID == $author_selected){
@@ -765,7 +774,7 @@ class wacimportcsv{
         
             echo "<div>";
             echo '<span><input type="file" name="wacfilecsv"></span>';
-            echo '<input type="submit" value="Créer une sauvegarde à partir du fichier">';
+            echo '<input type="submit" value="Créer un modèle à partir de ce fichier">';
             echo '</div>';
         echo '</form>';
         
