@@ -5,9 +5,9 @@
  *	@version 0.0.1
  */
 /*
- Plugin Name: W&Co import csv
+ Plugin Name: CSV to WP
  Plugin URI: http://www.yann.com/
- Description: import google sheet on cpt/acf
+ Description: WP&Co CSV to WordPress content importer
  Version: 0.0.1
  Author: Yann Dubois
  Author URI: http://www.yann.com/
