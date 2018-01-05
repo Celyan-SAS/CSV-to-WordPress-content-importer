@@ -726,74 +726,105 @@ class wacimportcsv{
         /** form to ad url **/
         echo '<form action="" method="POST" enctype="multipart/form-data">';
 
-        /** NAME **/
-        echo '<div>';
-        echo 'Nom du modèle<br>';
-        echo '<input type="text" name="namesauvegarde" >';
-        echo '</div>';
+        echo '<table>';
+            /** NAME **/
+            echo '<tr>';
+                echo '<th>';
+                    echo 'Nom du modèle';
+                echo '</th>';
+                echo '<td>';
+                    echo '<input type="text" name="namesauvegarde" >';
+                echo '</td>';
+            echo '</tr>';
 
-        /** STARTING LINE **/
-        echo '<div>';
-        echo 'N° de la ligne contenant le nom des colonnes<br>';
-        echo '<input type="text" name="startline" value="1" >';
-        echo '</div>';
+            /** STARTING LINE **/
+            echo '<tr>';
+                echo '<th>';
+                    echo 'N° de la ligne contenant le nom des colonnes';
+                echo '</th>';
+                echo '<td>';
+                    echo '<input type="text" name="startline" value="1" >';
+                echo '</td>';
+            echo '</tr>';
 
-        /** TYPE ACTION POUR ABSENT **/
-        echo '<div>';
-        echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:<br>';
-        echo '<select name="actionligneabsente">';
-        echo '<option value="ignorerpost">Conserver le contenu existant</option>';
-        echo '<option value="deletepost">Supprimer le contenu existant</option>';
-        echo '</select>';
-        echo '</div>';
+            /** TYPE ACTION POUR ABSENT **/
+            echo '<tr>';
+                echo '<th>';
+                    echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:';
+                echo '</th>';
+                echo '<td>';
+                    echo '<select name="actionligneabsente">';
+                        echo '<option value="ignorerpost">Conserver le contenu existant</option>';
+                        echo '<option value="deletepost">Supprimer le contenu existant</option>';
+                    echo '</select>';
+                echo '</td>';
+            echo '</tr>';
 
-        /** TYPE separateur **/
-        echo '<div>';
-        echo 'Séparateur de champ<br>';
-        echo '<input type="text" name="separatortype" value="," >';
-        echo '</div>';
+            /** TYPE separateur **/
+            echo '<tr>';
+                echo '<th>';
+                    echo 'Séparateur de champ';
+                echo '</th>';
+                echo '<td>';
+                    echo '<input type="text" name="separatortype" value="," >';
+                echo '</td>';
+            echo '</tr>';
 
-        /** CPT **/
-        //Get all the cpt
-        $args_cpt = array('public'   => true);
-        $list_cpt = get_post_types($args_cpt);
-        echo '<div>';
-        echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
-        echo '<select name="cptsave" style="width:150px;">';
-        echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
-        foreach($list_cpt as $cpt_code=>$cpt_name){
-            $selected = '';
-            if($cpt_code == $cptlinked){
-                $selected = 'selected';
-            }
-            echo '<option value="'.$cpt_code.'" '.$selected.'>'.$cpt_name.'</option>';
-        }
-        echo '</select>';
-        echo '</div>';
+            /** CPT **/
+            //Get all the cpt
+            $args_cpt = array('public'   => true);
+            $list_cpt = get_post_types($args_cpt);
+            echo '<tr>';
+                echo '<th>';
+                    echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
+                echo '</th>';
+                echo '<td>';
+                    echo '<select name="cptsave" style="width:150px;">';
+                        echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
+                        foreach($list_cpt as $cpt_code=>$cpt_name){
+                            $selected = '';
+                            if($cpt_code == $cptlinked){
+                                $selected = 'selected';
+                            }
+                            echo '<option value="'.$cpt_code.'" '.$selected.'>'.$cpt_name.'</option>';
+                        }
+                    echo '</select>';
+                echo '</td>';
+            echo '</tr>';
 
-        /** SELECT A AUTHOR **/
-        $args_users = array(
-            'role__in'     => array('administrator','editor','author')
-        );
-        $all_users = get_users( $args_users );
-        echo '<div>';
-        echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
-        echo '<select name="authorsave" style="width:150px;">';
-        echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
-        foreach($all_users as $user){
-            $selected = '';
-            if($user->ID == $author_selected){
-                $selected = 'selected';
-            }
-            echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
-        }
-        echo '</select>';
-        echo '</div>';
+            /** SELECT A AUTHOR **/
+            $args_users = array(
+                'role__in'     => array('administrator','editor','author')
+            );
+            $all_users = get_users( $args_users );
+            echo '<tr>';
+                echo '<th>';
+                    echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
+                echo '</th>';
+                echo '<td>';
+                    echo '<select name="authorsave" style="width:150px;">';
+                        echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
+                        foreach($all_users as $user){
+                            $selected = '';
+                            if($user->ID == $author_selected){
+                                $selected = 'selected';
+                            }
+                            echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
+                        }
+                    echo '</select>';
+                echo '</td>';
+            echo '</tr>';
 
-        echo "<div>";
-        echo '<span><input type="file" name="wacfilecsv"></span>';
-        echo '<input type="submit" value="Créer un modèle à partir de ce fichier">';
-        echo '</div>';
+            echo '<tr>';
+                echo '<th>';
+                    echo '<span><input type="file" name="wacfilecsv"></span>';
+                echo '</th>';
+                echo '<td>';
+                    echo '<input type="submit" value="Créer un modèle à partir de ce fichier">';
+                echo '</td>';
+            echo '</tr>';
+
+        echo '</table>';
         echo '</form>';
 
         echo '</div>';
