@@ -13,7 +13,6 @@ class wacimportcsv{
             return;
         }
         add_action('admin_menu', array($this, 'importcsv_menu'));
-        add_action('admin_init', 'fontawesome_dashboard');
         
         add_action ('init',array($this,'process_post'));
 
@@ -38,11 +37,6 @@ class wacimportcsv{
         wp_register_style('style_csv', plugins_url('/css/style_csv.css', dirname(__FILE__)), array(), '1.0', 'all');
         wp_enqueue_style('style_csv'); // Enqueue it!
     }
-
-    public function fontawesome_dashboard() {
-        wp_enqueue_style('fontawesome', 'http:////netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css', '', '4.0.3', 'all');
-    }
-
 
     public function read_csv($file,$startingline,$separatortype=",",$limitline = 0){
 
@@ -433,7 +427,7 @@ class wacimportcsv{
         $capability = 'manage_options';
         $menu_slug = 'wacimportcsvoptions';
         $function = array($this, 'wacimportcsvoptions_main_menu_options');
-        $icon_url = 'fas fa-upload';
+        $icon_url = 'dashicons-upload';
 
         add_menu_page($page_title, $menu_title, $capability, $menu_slug, $function, $icon_url);
     }
