@@ -1,3 +1,6 @@
 .modeles_liste tbody > tr > td:first-child{
     font-size:15px;
 }
+.modeles_liste tbody > tr > td:first-child .modele_title{
+    cursor:pointer;
+}

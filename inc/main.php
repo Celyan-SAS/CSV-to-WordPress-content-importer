@@ -690,17 +690,18 @@ class wacimportcsv{
             foreach($list_decoded as $key_ls=>$ls){
                 echo '<tr id="wac_'.$key_ls.'">';
                 echo '<td>';
-                echo $key_ls;
+                echo '<strong class="modele_title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
+                echo '<div>';
+                echo '<input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '<input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '</div>';
                 echo '</td>';
 
                 echo '<td>';
+                echo '<span>'.$ls['cpt'].'</span>';
                 echo '</td>';
-
                 echo '<td>';
-
-                echo '<input type="button" value="Delete" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                echo '<input type="button" value="Edit" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                echo '<input type="button" value="Séléctionner fichier" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '<input type="button" value="Importer" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
 
                 //form
                 echo '<form action="" method="POST" enctype="multipart/form-data">';
