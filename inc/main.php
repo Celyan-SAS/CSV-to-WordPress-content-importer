@@ -1,33 +1,35 @@
 <?php
 class wacimportcsv{
-    
+
     public $_list_save_name = "wac_list_save_name_importcsv";
     private $_html_admin;
     private $_message_post_process;
     private $_wacmetakey = "yd_csv_import_line_id";
-    
+
     public function __construct() {
-        
+
         /**ADMIN**/
         if(!is_admin()){
             return;
         }
         add_action('admin_menu', array($this, 'importcsv_menu'));
-        add_action ('init',array($this,'process_post'));
+        add_action('admin_init', 'fontawesome_dashboard');
         
+        add_action ('init',array($this,'process_post'));
+
         /** add js **/
         add_action('admin_enqueue_scripts', array($this,'wacimportcsv_scripts_enqueue'));
         /** add css **/
         add_action('admin_enqueue_scripts', array($this,'wacimportcsv_css_enqueue'));
-        
+
         /** ajax **/
         add_action( 'wp_ajax_wac_editcsvdocument', array($this,'wac_editcsvdocument') );
         add_action( 'wp_ajax_nopriv_wac_editcsvdocument', array($this,'wac_editcsvdocument') );
-        
+
         add_action( 'wp_ajax_wac_deletecsvdocument', array($this,'wac_deletecsvdocument') );
         add_action( 'wp_ajax_nopriv_wac_deletecsvdocument', array($this,'wac_deletecsvdocument') );
     }
-    
+
     public function wacimportcsv_scripts_enqueue(){
         wp_enqueue_script('jquery');
         wp_enqueue_script('wacreadcsvdocument', plugins_url('/js/wac_importcsv_admin.js', dirname(__FILE__)), array('jquery'), '0.0.1', false);
@@ -36,20 +38,25 @@ class wacimportcsv{
         wp_register_style('style_csv', plugins_url('/css/style_csv.css', dirname(__FILE__)), array(), '1.0', 'all');
         wp_enqueue_style('style_csv'); // Enqueue it!
     }
-        
+
+    public function fontawesome_dashboard() {
+        wp_enqueue_style('fontawesome', 'http:////netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css', '', '4.0.3', 'all');
+    }
+
+
     public function read_csv($file,$startingline,$separatortype=",",$limitline = 0){
-                
+
         $return_array = array();
         $row_count = 0;
         if (($handle = fopen($file, "r")) !== FALSE) {
             while (($data = fgetcsv($handle, 0, $separatortype)) !== FALSE) {
-                
+
                 //zap x lines
                 if($startingline!=0 && $row_count<$startingline){
                     $row_count++;
                     continue;
                 }
-                
+
                 $num = count($data);
                 //echo "<p> $num champs à la ligne $row_count: X <br /></p>\n";
                 for ($c=0; $c < $num; $c++) { //one line
@@ -66,9 +73,9 @@ class wacimportcsv{
         }        
         return $return_array;
     }
-    
+
     public function process_post(){
-        
+
         if(isset($_FILES["wacfilecsv"]["tmp_name"]) && $_FILES["wacfilecsv"]["tmp_name"]!=""){
             //get the options
             $list_urls = get_option($this->_list_save_name,false);
@@ -76,10 +83,10 @@ class wacimportcsv{
             if($list_urls){
                 $list_decoded = json_decode($list_urls,true);
             }            
-            
+
             //get first line of csv
             $data_first_line = $this->read_csv($_FILES["wacfilecsv"]["tmp_name"],$_POST['startline'],$_POST['separatortype'],0);   
-            
+
             /* STARTING LINE */
             $list_decoded[$_POST['namesauvegarde']]['startline'] = $_POST['startline'];
             /* SAVE AUTHOR */
@@ -92,44 +99,44 @@ class wacimportcsv{
             $list_decoded[$_POST['namesauvegarde']]['separatortype'] = $_POST['separatortype'];
             /* save first line */
             $list_decoded[$_POST['namesauvegarde']]['actionligneabsente'] = $_POST['actionligneabsente'];
-            
+
             /*reencode */
             $tosave = json_encode($list_decoded);
             /*save*/
             update_option($this->_list_save_name,$tosave);
-            
+
             //NEXT PART         
             $this->selectorfields($data_first_line[0],$_POST['cptsave'],$_POST['namesauvegarde']);
         }
-        
+
         if(isset($_POST['associatecptcolumn']) && $_POST['associatecptcolumn']!=""){
-            
+
             $alldata = $_POST;
             $name_index = $_POST['namesauvegarde'];
             unset($alldata['associatecptcolumn']);
             unset($alldata['namesauvegarde']);
-            
+
             $to_save_data = array();
             foreach($alldata as $idcol=>$data){
                 $id_data = explode('|',$idcol);
-//TODO SECURIT2 POUR PPL                
+                //TODO SECURIT2 POUR PPL
                 //for taxo
                 if(preg_match('#taxo_#', $id_data[0])){
                     //[language][taxo][id col] = data
                     $id_data[0] = str_replace('taxo_','', $id_data[0]);
                     $to_save_data[$id_data[1]]['taxonomie'][$id_data[0]] = $data;
-                    
+
                 }elseif(preg_match('#subt_#', $id_data[0])){
                     //[language][taxo][id col] = data
                     $id_data[0] = str_replace('subt_','', $id_data[0]);
                     $to_save_data[$id_data[1]]['subtaxonomie'][$id_data[0]] = $data;
-                    
+
                 }else{
                     //[language][id col] = data
                     $to_save_data[$id_data[1]][$id_data[0]] = $data;
                 } 
             }
-            
+
             /* get urls */
             $list_urls = get_option($this->_list_save_name,false);
             $list_decoded = array();
@@ -142,17 +149,17 @@ class wacimportcsv{
             /*save*/
             update_option($this->_list_save_name,$tosave);
         }
-        
+
         /* TEST IMPORT */
         if(isset($_FILES['wacfilecsvprocess']["tmp_name"]) && $_FILES['wacfilecsvprocess']["tmp_name"]!=""){
             $this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave']);
         }        
     }    
-    
+
     public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list){
-        
+
         $html = '';
-        
+
         $_ppl_names = pll_languages_list(array('fields'=>'name'));
         $_ppl_slugs = pll_languages_list(array('fields'=>'slug'));
 
@@ -161,15 +168,15 @@ class wacimportcsv{
         $html.= '<div><strong>'.$namesauvegarde.'</strong></div>';
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
-        
+
         if(isset($cptlinked) && $cptlinked != ""){
             $args = array(
-              'posts_per_page'   => 1,
-              'post_type'        => $cptlinked,
-              'post_status'      => "any",
-              'order'   => 'ASC',
-              'orderby' =>  'ID'
-              );
+                'posts_per_page'   => 1,
+                'post_type'        => $cptlinked,
+                'post_status'      => "any",
+                'order'   => 'ASC',
+                'orderby' =>  'ID'
+            );
             $cptposts = get_posts( $args );            
             if(isset($cptposts[0]->ID) && $cptposts[0]->ID != ""){
                 //will be used later to creafte select fields
@@ -179,19 +186,19 @@ class wacimportcsv{
 
         $html.= '<form action="" method="POST">';
         $html.= '<table>';
-        
+
         $html.= '<thead>';
         $html.= '<tr>';
+        $html.= '<th>';
+        $html.= 'Méta-données';
+        $html.= '</th>';
+
+        foreach($_ppl_slugs as $keyppl=>$ppl_slug){
             $html.= '<th>';
-                $html.= 'Méta-données';
+            $html.= $ppl_slug;
             $html.= '</th>';
-            
-            foreach($_ppl_slugs as $keyppl=>$ppl_slug){
-                $html.= '<th>';
-                    $html.= $ppl_slug;
-                $html.= '</th>';
-            }
-            
+        }
+
         $html.= '</tr>';
         $html.= '</thead>';
         $html.= '<tbody>';
@@ -218,39 +225,39 @@ class wacimportcsv{
             }
             //LINE -------------------------
             $html.= '<tr style="'.$color.'">';
-            
-                //TITLE COL --------------------------
+
+            //TITLE COL --------------------------
+            $html.= '<td>';
+            $html.= '<strong style="width: 250px;display: inline-block;">';
+            $html.= $fieldname;
+            $html.= '</strong>';
+            $html.= '</td>';
+
+            //COL BY LANGUAGE --------------------
+            foreach($_ppl_names as $keyppl=>$ppl_name){
                 $html.= '<td>';
-                    $html.= '<strong style="width: 250px;display: inline-block;">';
-                        $html.= $fieldname;
-                    $html.= '</strong>';
-                $html.= '</td>';
-                
-                //COL BY LANGUAGE --------------------
-                foreach($_ppl_names as $keyppl=>$ppl_name){
-                    $html.= '<td>';
-                    $default_value = "notselected";
-                    if($association_list[$_ppl_slugs[$keyppl]][$fieldkey] !== null){
-                       $default_value = $association_list[$_ppl_slugs[$keyppl]][$fieldkey]; 
-                    }
-                    $html.= $this->create_select_form($titles, $fieldkey.'|'.$_ppl_slugs[$keyppl],$default_value);
-
-//                    $default_value = "";
-//                    if($association_list[$fieldkey.'_text'] !== null && $fieldkey!='id_unique'){
-//                       $default_value = $association_list[$fieldkey.'_text']; 
-//                    }
-
-//                    if($fieldkey!='id_unique'){
-//                        $html.= '<input type="text" name="'.$fieldkey.'_text_'.$_ppl_slugs[$fieldkey].'" value="'.$default_value.'">';
-//                    }else{
-//                        $html.= "Si non associé, un identifiant unique sera automatiquement généré";
-//                    }
-                    $html.= '</td>';
+                $default_value = "notselected";
+                if($association_list[$_ppl_slugs[$keyppl]][$fieldkey] !== null){
+                    $default_value = $association_list[$_ppl_slugs[$keyppl]][$fieldkey];
                 }
-                
+                $html.= $this->create_select_form($titles, $fieldkey.'|'.$_ppl_slugs[$keyppl],$default_value);
+
+                //                    $default_value = "";
+                //                    if($association_list[$fieldkey.'_text'] !== null && $fieldkey!='id_unique'){
+                //                       $default_value = $association_list[$fieldkey.'_text'];
+                //                    }
+
+                //                    if($fieldkey!='id_unique'){
+                //                        $html.= '<input type="text" name="'.$fieldkey.'_text_'.$_ppl_slugs[$fieldkey].'" value="'.$default_value.'">';
+                //                    }else{
+                //                        $html.= "Si non associé, un identifiant unique sera automatiquement généré";
+                //                    }
+                $html.= '</td>';
+            }
+
             $html.= '</tr>';             
         }
-        
+
         /////////////////
         //Add Post TAXOS
         /////////////////
@@ -260,11 +267,11 @@ class wacimportcsv{
             if($taxo_assoc === "language" || $taxo_assoc === "post_translations"){
                 continue;
             }
-            
+
             $data_taxonomy = get_taxonomy($taxo_assoc);
 
-            
-//TODO SECURIT21 SI PAS PPL            
+
+            //TODO SECURIT21 SI PAS PPL
             //get the default
             if($color_set){
                 $color_set = 0;
@@ -275,55 +282,55 @@ class wacimportcsv{
             }
             //LINE -------------------------
             $html.= '<tr style="'.$color.'">';
-            
-                //TITLE COL --------------------------
-                $html.= '<td>';
-                    $html.= '<strong style="width: 250px;display: inline-block;">';
-                        $html.= 'TAXO : '.$taxo_assoc;
-                    $html.= '</strong>';
-                $html.= '</td>';
-            
+
+            //TITLE COL --------------------------
+            $html.= '<td>';
+            $html.= '<strong style="width: 250px;display: inline-block;">';
+            $html.= 'TAXO : '.$taxo_assoc;
+            $html.= '</strong>';
+            $html.= '</td>';
+
             //COL BY LANGUAGE --------------------
             foreach($_ppl_slugs as $keyppl=>$ppl_name){
 
                 $html.= '<td>';
                 $default_value = "notselected";
                 if($association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc] !== null){
-                   $default_value = $association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc]; 
+                    $default_value = $association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc];
                 }
                 $html.= $this->create_select_form($titles, "taxo_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
                 $html.= '</td>';
             }
             $html.= '</tr>'; 
-            
-            
+
+
             if(isset($data_taxonomy->hierarchical) && $data_taxonomy->hierarchical==1){
-            
+
                 $html.= '<tr style="'.$color.'">'; 
                 //TITLE COL --------------------------
                 $html.= '<td>';
-                    $html.= '<strong style="width: 250px;display: inline-block;">';
-                        $html.= 'SOUS TAXO : '.$taxo_assoc;
-                    $html.= '</strong>';
+                $html.= '<strong style="width: 250px;display: inline-block;">';
+                $html.= 'SOUS TAXO : '.$taxo_assoc;
+                $html.= '</strong>';
                 $html.= '</td>';
-                
+
                 foreach($_ppl_slugs as $keyppl=>$ppl_name){
                     //create sous rubrique
                     $html.= '<td>';
                     $default_value = "notselected";
                     if($association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc] !== null){
-                       $default_value = $association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc]; 
+                        $default_value = $association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc];
                     }
                     $html.= $this->create_select_form($titles, "subt_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
                     $html.= '</td>';  
                 }
-                
+
                 $html.= '</tr>'; 
             }
-            
-                       
+
+
         }
-              
+
         /////////////////
         //Add Post status
         /////////////////
@@ -336,29 +343,29 @@ class wacimportcsv{
         }
         //LINE -------------------------
         $html.= '<tr style="'.$color.'">';
-        
-            //COL TITLE ----------------
+
+        //COL TITLE ----------------
+        $html.= '<td>';
+        $html.= '<strong style="width: 250px;display: inline-block;">';
+        $html.= "Post status";
+        $html.= '</strong>';
+        $html.= '</td>';
+
+        //COL ----------------------
+        foreach($_ppl_names as $keyppl=>$ppl_name){
             $html.= '<td>';
-                $html.= '<strong style="width: 250px;display: inline-block;">';
-                    $html.= "Post status";
-                $html.= '</strong>';
-            $html.= '</td>';
-            
-            //COL ----------------------
-            foreach($_ppl_names as $keyppl=>$ppl_name){
-                $html.= '<td>';
-                    $list_status = array(
-                      'publish'=>'Publié',
-                      'draft'=>'Brouillon'
-                    );
-                    $default_value = "notselected";
-                    if($association_list[$_ppl_slugs[$keyppl]]['post_status'] !== null){
-                       $default_value = $association_list[$_ppl_slugs[$keyppl]]['post_status']; 
-                    }
-                    $html.= $this->create_select_form($list_status, 'post_status|'.$_ppl_slugs[$keyppl],$association_list[$_ppl_slugs[$keyppl]]['post_status']);
-                $html.= '</td>';
+            $list_status = array(
+                'publish'=>'Publié',
+                'draft'=>'Brouillon'
+            );
+            $default_value = "notselected";
+            if($association_list[$_ppl_slugs[$keyppl]]['post_status'] !== null){
+                $default_value = $association_list[$_ppl_slugs[$keyppl]]['post_status'];
             }
-            
+            $html.= $this->create_select_form($list_status, 'post_status|'.$_ppl_slugs[$keyppl],$association_list[$_ppl_slugs[$keyppl]]['post_status']);
+            $html.= '</td>';
+        }
+
         $html.= '</tr>';
 
         ////////////////
@@ -374,34 +381,34 @@ class wacimportcsv{
             }
             //LINE--------------------------
             $html.= '<tr style="'.$color.'">';
-            
-                //COL ----------------------
+
+            //COL ----------------------
+            $html.= '<td>';
+            $html.= '<strong style="width: 250px;display: inline-block;">';
+            $html.= $field_data['label'];
+            $html.= '</strong>';
+            $html.= '<div><span>'.$field_data['name'].'</span></div>';
+            $html.= '</td>';
+
+            //COL-----------------------
+            foreach($_ppl_names as $keyppl=>$ppl_name){
                 $html.= '<td>';
-                    $html.= '<strong style="width: 250px;display: inline-block;">';
-                        $html.= $field_data['label'];
-                    $html.= '</strong>';
-                    $html.= '<div><span>'.$field_data['name'].'</span></div>';
-                $html.= '</td>';
-
-                //COL-----------------------
-                foreach($_ppl_names as $keyppl=>$ppl_name){
-                    $html.= '<td>';
-                        $default_value = "notselected";
-                        if($association_list[$_ppl_slugs[$keyppl]][$field_data['key']] !== null){
-                           $default_value = $association_list[$_ppl_slugs[$keyppl]][$field_data['key']]; 
-                        }
-
-                        $html.= $this->create_select_form($titles, $field_data['key'].'|'.$_ppl_slugs[$keyppl],$default_value);
-
-                        $default_value = "";
-//                        if($association_list[$field_data['key'].'_text'] !== null){
-//                           $default_value = $association_list[$field_data['key'].'_text']; 
-//                        }
-
-                        //$html.= '<input type="text" name="'.$field_data['key'].'_text" value="'.$default_value.'">';
-                    $html.= '</td>';
+                $default_value = "notselected";
+                if($association_list[$_ppl_slugs[$keyppl]][$field_data['key']] !== null){
+                    $default_value = $association_list[$_ppl_slugs[$keyppl]][$field_data['key']];
                 }
-                
+
+                $html.= $this->create_select_form($titles, $field_data['key'].'|'.$_ppl_slugs[$keyppl],$default_value);
+
+                $default_value = "";
+                //                        if($association_list[$field_data['key'].'_text'] !== null){
+                //                           $default_value = $association_list[$field_data['key'].'_text'];
+                //                        }
+
+                //$html.= '<input type="text" name="'.$field_data['key'].'_text" value="'.$default_value.'">';
+                $html.= '</td>';
+            }
+
             $html.= '</tr>';
         }
 
@@ -412,38 +419,38 @@ class wacimportcsv{
         $html.= '<input value="1" name="associatecptcolumn" type="hidden">';
         $html.= '<input type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
-        
-        
+
+
         /* for when used in form */
         $this->_html_admin = $html;
         /* for when used by ajax */
         return $html;
     }
-    
+
     public function importcsv_menu(){
         $page_title = 'CSV to WP';
         $menu_title = 'CSV to WP';
         $capability = 'manage_options';
         $menu_slug = 'wacimportcsvoptions';
         $function = array($this, 'wacimportcsvoptions_main_menu_options');
-        $icon_url = 'dashicons-media-code';
+        $icon_url = 'fas fa-upload';
 
         add_menu_page($page_title, $menu_title, $capability, $menu_slug, $function, $icon_url);
     }
-    
+
     public function import_data_from_csv($file,$key){
 
         //get data from key
         $list_urls = get_option($this->_list_save_name,false);
         $list_decoded = json_decode($list_urls,true);
         $data_save = $list_decoded[$key];
-        
+
         $startline = $data_save['startline']+1;
         $values = $this->read_csv($file,$startline,$data_save['separatortype'],"all");
-        
+
         //get all the keys to check witch one exist already
-         global $wpdb;
-         
+        global $wpdb;
+
         $query_postmeta = "SELECT meta_value,post_id FROM `".$wpdb->prefix."postmeta` WHERE `meta_key` = '".$this->_wacmetakey."'";
         $result_postmeta = $wpdb->get_results($query_postmeta,ARRAY_A);
         $postmeta_list = array();
@@ -454,19 +461,19 @@ class wacimportcsv{
         //update post meta "yd_csv_import_line_id"
         $association_list = $data_save['association'];
         $id_postmeta = $association_list['id_unique']; 
-        
+
         $ajout_post = 0;
         $delete_post = 0;
         //parse csvlines if no $this->_wacmetakey exist, create post
         $message_lines = array();
         foreach($values as $line){
-                        
+
             if($id_postmeta != "notselected"){
                 $unique_id_value = md5($line[$id_postmeta]);
             }else{
                 $unique_id_value = md5(implode('|',$line));
             }
-            
+
             if(isset($postmeta_list[$unique_id_value]) && $postmeta_list[$unique_id_value]!=""){
                 unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
                 continue;
@@ -475,10 +482,10 @@ class wacimportcsv{
                 $message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value);
                 $ajout_post++;
             }
-            
-//break;//ONLY FOR TEST
+
+            //break;//ONLY FOR TEST
         }
-        
+
         //mettre le post en trash si l'option a été choisi que le postmeta list a encore des elements et le post meta est correspondant
         //ignorerpost ou deletepost
         if($data_save['actionligneabsente'] == "deletepost" && count($postmeta_list)>0){ 
@@ -491,14 +498,14 @@ class wacimportcsv{
                 }
             }                
         }//end if trash
-        
+
         $this->_message_post_process = $ajout_post.' ont été ajoutés.<br>'.$delete_post.' ont été supprimés.';
-        
+
         //mail
         $user_meta = get_userdata(get_current_user_id());
         $to = $user_meta->user_email;
         $subject = "Informations sur l'import du ".date('d-m-Y H:i:s');
-        
+
         $message = $ajout_post.' ont été ajoutés.<br>';
         $message.= $delete_post.' ont été supprimés.<br>';
         foreach($message_lines as $idpostml=>$ml){
@@ -508,16 +515,16 @@ class wacimportcsv{
         }        
         $t = wp_mail($to,$subject,$message);
     }
-    
+
     public function create_post($line,$list_decoded,$key,$unique_id_value){   
-                
+
         $message = array();
         $association_list_language = $list_decoded[$key]['association'];
-                
+
         //loop for language
         $list_assoc_language = array();
         foreach($association_list_language as $language_slug=>$association_list){
-        
+
             $data = array();
             //create a post
             $list_acf = array();
@@ -552,11 +559,11 @@ class wacimportcsv{
                 //set language if there is one;
                 if($language_slug !== 0){
                     pll_set_post_language($new_post_id, $language_slug);
-                    
+
                     //array to save later to associate posts between them
                     $list_assoc_language[$language_slug] = $new_post_id;
                 }
-                
+
                 $category_slug = $line[$association_list['post_category']];
                 if($category_slug && $category_slug != ""){
                     $the_cat_id = get_category_by_slug( $category_slug );
@@ -570,7 +577,7 @@ class wacimportcsv{
                 //TAXOS                
                 foreach($association_list['taxonomie'] as $key_taxo=>$taxo_value){
                     $list_terms = array();
-                    
+
                     if($line[$taxo_value] && $line[$taxo_value]!=""){
                         $term_data = get_term_by('name',$line[$taxo_value],$key_taxo);
                         if(isset($term_data->term_id)){
@@ -580,9 +587,9 @@ class wacimportcsv{
                             $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$taxo_value]." n'as pas été trouvé<br>";
                         }
                     }
-                    
+
                     if(isset($association_list['subtaxonomie'][$key_taxo])){
-                        
+
                         $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
                         if($subtaxo_value && $subtaxo_value!="" && $line[$subtaxo_value]!=""){
                             $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
@@ -594,27 +601,27 @@ class wacimportcsv{
                                 $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
                             }
                         }
-                        
+
                     }    
-                                               
+
                     //wp_set_object_terms( $new_post_id,$list_terms, $key_taxo,true); //create is doesn't exit NEED TO UNCOMENT THE LINES BEFORE
                     $returnTerm = wp_set_post_terms( $new_post_id,$list_terms , $key_taxo,true); ///do not create if does not exit
                 }
-                          
+
                 //update acfs
                 foreach($list_acf as $acf_key=>$acf_value){
                     update_field($acf_key, $acf_value, $new_post_id);
                 }
             }//end if new post
-            
+
         }//end foreach language
-        
+
         //after loop associate all posts between them
         pll_save_post_translations($list_assoc_language);
-        
+
         return $message;
     }
-    
+
     public function insert_post($data){
         $new_post = array();
         $new_post['post_title'] = $data['post_title'];
@@ -630,7 +637,7 @@ class wacimportcsv{
             foreach ($errors as $error) {
                 //$error_html.=$error;
                 //echo $error;
-//todo renvoyer un message d'erreur
+                //todo renvoyer un message d'erreur
             }
             return false; //$error_html;
         }
@@ -645,11 +652,11 @@ class wacimportcsv{
             $thedata = $list_decoded[$_POST['wacdoc']];
             $return = $this->selectorfields($thedata['firstline'], $thedata['cpt'],$_POST['wacdoc'],$thedata['association']);            
         }
-        
+
         echo $return;
         wp_die();
     }
-    
+
     public function wac_deletecsvdocument(){
         $return = false;
         $list_urls = get_option($this->_list_save_name,false); 
@@ -663,12 +670,12 @@ class wacimportcsv{
         echo json_encode($return);
         wp_die();
     }
-    
+
     public function wacimportcsvoptions_main_menu_options() {
-                
+
         echo '<div class="wrap">';
         echo '<h2>'.__('Import depuis fichier CSV','yd_import_csv').'</h2>';
-        
+
         /** LIST URLS **/
         echo '<hr>';
         echo '<div id="messagepostprocess">'.$this->_message_post_process.'</div>';
@@ -678,37 +685,37 @@ class wacimportcsv{
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
             echo '<table class="modeles_liste">';
-                echo '<thead>';
-                    echo '<tr>';
-                        echo '<th>Nom</th>';
-                        echo '<th>Type de contenu</th>';
-                        echo '<th>Action</th>';
-                    echo '</tr>';
-                echo '</thead>';
+            echo '<thead>';
+            echo '<tr>';
+            echo '<th>Nom</th>';
+            echo '<th>Type de contenu</th>';
+            echo '<th>Action</th>';
+            echo '</tr>';
+            echo '</thead>';
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
                 echo '<tr id="wac_'.$key_ls.'">';
-                    echo '<td>';
-                    echo $key_ls;
-                    echo '</td>';
+                echo '<td>';
+                echo $key_ls;
+                echo '</td>';
 
-                    echo '<td>';
-                    echo '</td>';
-                
-                    echo '<td>';
-                    
-                        echo '<input type="button" value="Delete" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                        echo '<input type="button" value="Edit" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                        echo '<input type="button" value="Séléctionner fichier" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                    
-                        //form
-                        echo '<form action="" method="POST" enctype="multipart/form-data">';
-                            echo '<input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'">';
-                            echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
-                            echo '<input type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;">';
-                        echo '</form>';
+                echo '<td>';
+                echo '</td>';
 
-                        echo '</td>';
+                echo '<td>';
+
+                echo '<input type="button" value="Delete" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '<input type="button" value="Edit" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '<input type="button" value="Séléctionner fichier" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+
+                //form
+                echo '<form action="" method="POST" enctype="multipart/form-data">';
+                echo '<input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'">';
+                echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
+                echo '<input type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;">';
+                echo '</form>';
+
+                echo '</td>';
                 echo '</tr>';
                 $count_line_save++;
             }
@@ -718,106 +725,106 @@ class wacimportcsv{
         echo '<div id="html_admin_assoc_cpt">';
         echo $this->_html_admin;
         echo '</div>';
-        
+
         echo '<hr>';
         echo '<h2>Nouveau modèle d\'importation</h2>';
         /** form to ad url **/
         echo '<form action="" method="POST" enctype="multipart/form-data">';
-        
-            /** NAME **/
-            echo '<div>';
-                echo 'Nom du modèle<br>';
-                echo '<input type="text" name="namesauvegarde" >';
-            echo '</div>';            
-        
-            /** STARTING LINE **/
-            echo '<div>';
-                echo 'N° de la ligne contenant le nom des colonnes<br>';
-                echo '<input type="text" name="startline" value="1" >';
-            echo '</div>';
-            
-            /** TYPE ACTION POUR ABSENT **/
-            echo '<div>';
-                echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:<br>';
-                echo '<select name="actionligneabsente">';
-                echo '<option value="ignorerpost">Conserver le contenu existant</option>';
-                    echo '<option value="deletepost">Supprimer le contenu existant</option>';
-                echo '</select>';
-            echo '</div>'; 
-            
-            /** TYPE separateur **/
-            echo '<div>';
-                echo 'Séparateur de champ<br>';
-                echo '<input type="text" name="separatortype" value="," >';
-            echo '</div>';             
-            
-            /** CPT **/
-            //Get all the cpt
-            $args_cpt = array('public'   => true);
-            $list_cpt = get_post_types($args_cpt);
-            echo '<div>';
-                echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
-                echo '<select name="cptsave" style="width:150px;">';
-                echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
-                foreach($list_cpt as $cpt_code=>$cpt_name){
-                    $selected = '';
-                    if($cpt_code == $cptlinked){
-                        $selected = 'selected';
-                    }
-                    echo '<option value="'.$cpt_code.'" '.$selected.'>'.$cpt_name.'</option>';
-                }
-                echo '</select>';
-            echo '</div>';
 
-            /** SELECT A AUTHOR **/
-            $args_users = array(
-                'role__in'     => array('administrator','editor','author')
-             ); 
-            $all_users = get_users( $args_users );
-            echo '<div>';
-                echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
-                echo '<select name="authorsave" style="width:150px;">';
-                echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
-                foreach($all_users as $user){
-                    $selected = '';
-                    if($user->ID == $author_selected){
-                        $selected = 'selected';
-                    }
-                    echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
-                }
-                echo '</select>';
-            echo '</div>';        
-        
-            echo "<div>";
-            echo '<span><input type="file" name="wacfilecsv"></span>';
-            echo '<input type="submit" value="Créer un modèle à partir de ce fichier">';
-            echo '</div>';
+        /** NAME **/
+        echo '<div>';
+        echo 'Nom du modèle<br>';
+        echo '<input type="text" name="namesauvegarde" >';
+        echo '</div>';
+
+        /** STARTING LINE **/
+        echo '<div>';
+        echo 'N° de la ligne contenant le nom des colonnes<br>';
+        echo '<input type="text" name="startline" value="1" >';
+        echo '</div>';
+
+        /** TYPE ACTION POUR ABSENT **/
+        echo '<div>';
+        echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:<br>';
+        echo '<select name="actionligneabsente">';
+        echo '<option value="ignorerpost">Conserver le contenu existant</option>';
+        echo '<option value="deletepost">Supprimer le contenu existant</option>';
+        echo '</select>';
+        echo '</div>';
+
+        /** TYPE separateur **/
+        echo '<div>';
+        echo 'Séparateur de champ<br>';
+        echo '<input type="text" name="separatortype" value="," >';
+        echo '</div>';
+
+        /** CPT **/
+        //Get all the cpt
+        $args_cpt = array('public'   => true);
+        $list_cpt = get_post_types($args_cpt);
+        echo '<div>';
+        echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
+        echo '<select name="cptsave" style="width:150px;">';
+        echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
+        foreach($list_cpt as $cpt_code=>$cpt_name){
+            $selected = '';
+            if($cpt_code == $cptlinked){
+                $selected = 'selected';
+            }
+            echo '<option value="'.$cpt_code.'" '.$selected.'>'.$cpt_name.'</option>';
+        }
+        echo '</select>';
+        echo '</div>';
+
+        /** SELECT A AUTHOR **/
+        $args_users = array(
+            'role__in'     => array('administrator','editor','author')
+        );
+        $all_users = get_users( $args_users );
+        echo '<div>';
+        echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
+        echo '<select name="authorsave" style="width:150px;">';
+        echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
+        foreach($all_users as $user){
+            $selected = '';
+            if($user->ID == $author_selected){
+                $selected = 'selected';
+            }
+            echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
+        }
+        echo '</select>';
+        echo '</div>';
+
+        echo "<div>";
+        echo '<span><input type="file" name="wacfilecsv"></span>';
+        echo '<input type="submit" value="Créer un modèle à partir de ce fichier">';
+        echo '</div>';
         echo '</form>';
-        
+
         echo '</div>';
     }
-    
+
     public function create_select_form($fields,$select_name,$default_value = null){
         $html = '';
         if(isset($fields) && $fields != ""){
             $html.= '<select name="'.$select_name.'">';
-            
-                if($default_value === 'notselected'){
+
+            if($default_value === 'notselected'){
+                $select = "selected";
+            }
+            $html.= '<option value="notselected" '.$select.'>Select a field</option>';
+
+            foreach( $fields as $field_value => $field_name ){
+
+                $select = "";
+                if((string)$default_value === (string)$field_value){
                     $select = "selected";
                 }
-                $html.= '<option value="notselected" '.$select.'>Select a field</option>';
-                
-                foreach( $fields as $field_value => $field_name ){
-                    
-                    $select = "";                    
-                    if((string)$default_value === (string)$field_value){                        
-                        $select = "selected";
-                    }                    
-                    $html.= '<option value="'.$field_value.'" '.$select.'>';
-                    $html.= $field_name;
-                    $html.= '</option>';
-                }                
-                
+                $html.= '<option value="'.$field_value.'" '.$select.'>';
+                $html.= $field_name;
+                $html.= '</option>';
+            }
+
             $html.='</select>';
         }
         return $html;
