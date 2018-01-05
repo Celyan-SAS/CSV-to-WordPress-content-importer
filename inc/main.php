@@ -17,6 +17,8 @@ class wacimportcsv{
         
         /** add js **/
         add_action('admin_enqueue_scripts', array($this,'wacimportcsv_scripts_enqueue'));
+        /** add css **/
+        add_action('admin_enqueue_scripts', array($this,'wacimportcsv_css_enqueue'));
         
         /** ajax **/
         add_action( 'wp_ajax_wac_editcsvdocument', array($this,'wac_editcsvdocument') );
@@ -29,6 +31,10 @@ class wacimportcsv{
     public function wacimportcsv_scripts_enqueue(){
         wp_enqueue_script('jquery');
         wp_enqueue_script('wacreadcsvdocument', plugins_url('/js/wac_importcsv_admin.js', dirname(__FILE__)), array('jquery'), '0.0.1', false);
+    }
+    public function wacimportcsv_css_enqueue(){
+        wp_register_style('style_csv', plugins_url('/css/style_csv.css', dirname(__FILE__)), array(), '1.0', 'all');
+        wp_enqueue_style('style_csv'); // Enqueue it!
     }
         
     public function read_csv($file,$startingline,$separatortype=",",$limitline = 0){
@@ -174,18 +180,21 @@ class wacimportcsv{
         $html.= '<form action="" method="POST">';
         $html.= '<table>';
         
+        $html.= '<thead>';
         $html.= '<tr>';
-            $html.= '<td>';
-                $html.= '';
-            $html.= '</td>';
+            $html.= '<th>';
+                $html.= 'Méta-données';
+            $html.= '</th>';
             
-            foreach($_ppl_names as $keyppl=>$ppl_name){
-                $html.= '<td>';
-                    $html.= $ppl_name;
-                $html.= '</td>';
+            foreach($_ppl_slugs as $keyppl=>$ppl_slug){
+                $html.= '<th>';
+                    $html.= $ppl_slug;
+                $html.= '</th>';
             }
             
         $html.= '</tr>';
+        $html.= '</thead>';
+        $html.= '<tbody>';
 
         $color_background = '#dcdcdc';
         $color_set = 1;
@@ -194,7 +203,7 @@ class wacimportcsv{
         //Add basic fields
         //////////////////
         $array_list_fields_wp = array(
-            'id_unique'=>'COLONE IDENTIFIANTE',
+            'id_unique'=>'Colonne identifiante',
             'post_title'=>'Post titre',
             'post_content'=>'Post content',
             'post_category'=>'Post catégorie'
@@ -212,9 +221,9 @@ class wacimportcsv{
             
                 //TITLE COL --------------------------
                 $html.= '<td>';
-                    $html.= '<span style="width: 250px;display: inline-block;">';
+                    $html.= '<strong style="width: 250px;display: inline-block;">';
                         $html.= $fieldname;
-                    $html.= '</span>';
+                    $html.= '</strong>';
                 $html.= '</td>';
                 
                 //COL BY LANGUAGE --------------------
@@ -234,7 +243,7 @@ class wacimportcsv{
 //                    if($fieldkey!='id_unique'){
 //                        $html.= '<input type="text" name="'.$fieldkey.'_text_'.$_ppl_slugs[$fieldkey].'" value="'.$default_value.'">';
 //                    }else{
-//                        $html.= "Si non associé, l'id sera automatique";
+//                        $html.= "Si non associé, un identifiant unique sera automatiquement généré";
 //                    }
                     $html.= '</td>';
                 }
@@ -269,9 +278,9 @@ class wacimportcsv{
             
                 //TITLE COL --------------------------
                 $html.= '<td>';
-                    $html.= '<span style="width: 250px;display: inline-block;">';
+                    $html.= '<strong style="width: 250px;display: inline-block;">';
                         $html.= 'TAXO : '.$taxo_assoc;
-                    $html.= '</span>';
+                    $html.= '</strong>';
                 $html.= '</td>';
             
             //COL BY LANGUAGE --------------------
@@ -293,9 +302,9 @@ class wacimportcsv{
                 $html.= '<tr style="'.$color.'">'; 
                 //TITLE COL --------------------------
                 $html.= '<td>';
-                    $html.= '<span style="width: 250px;display: inline-block;">';
+                    $html.= '<strong style="width: 250px;display: inline-block;">';
                         $html.= 'SOUS TAXO : '.$taxo_assoc;
-                    $html.= '</span>';
+                    $html.= '</strong>';
                 $html.= '</td>';
                 
                 foreach($_ppl_slugs as $keyppl=>$ppl_name){
@@ -330,9 +339,9 @@ class wacimportcsv{
         
             //COL TITLE ----------------
             $html.= '<td>';
-                $html.= '<span style="width: 250px;display: inline-block;">';
+                $html.= '<strong style="width: 250px;display: inline-block;">';
                     $html.= "Post status";
-                $html.= '</span>';
+                $html.= '</strong>';
             $html.= '</td>';
             
             //COL ----------------------
@@ -368,9 +377,10 @@ class wacimportcsv{
             
                 //COL ----------------------
                 $html.= '<td>';
-                    $html.= '<span style="width: 250px;display: inline-block;">';
-                        $html.= $field_data['label'].' ('.$field_data['name'].')';
-                    $html.= '</span>';
+                    $html.= '<strong style="width: 250px;display: inline-block;">';
+                        $html.= $field_data['label'];
+                    $html.= '</strong>';
+                    $html.= '<div><span>'.$field_data['name'].'</span></div>';
                 $html.= '</td>';
 
                 //COL-----------------------
@@ -395,11 +405,12 @@ class wacimportcsv{
             $html.= '</tr>';
         }
 
+        $html.= '</tbody>';
         $html.= '</table>';
         $html.= '</div>';
         $html.= '<input value="'.$namesauvegarde.'" name="namesauvegarde" type="hidden">';
         $html.= '<input value="1" name="associatecptcolumn" type="hidden">';
-        $html.= '<input type="submit" value="Update des fields acf">';
+        $html.= '<input type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
         
         
@@ -666,7 +677,7 @@ class wacimportcsv{
         $list_decoded = array();
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
-            echo '<table>';
+            echo '<table class="modeles_liste">';
                 echo '<thead>';
                     echo '<tr>';
                         echo '<th>Nom</th>';
@@ -674,29 +685,33 @@ class wacimportcsv{
                         echo '<th>Action</th>';
                     echo '</tr>';
                 echo '</thead>';
-            echo '<tr>';
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
-                echo '<td id="wac_'.$key_ls.'">';
-                    
-                echo '<input type="button" value="Delete" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                echo '<input type="button" value="Edit" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                echo '<input type="button" value="Séléctionner fichier" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                
-                echo $key_ls;
-                    
-                //form
-                echo '<form action="" method="POST" enctype="multipart/form-data">';
-                    echo '<input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'">';
-                    echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
-                    echo '<input type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;">';
-                echo '</form>';
+                echo '<tr id="wac_'.$key_ls.'">';
+                    echo '<td>';
+                    echo $key_ls;
+                    echo '</td>';
 
+                    echo '<td>';
+                    echo '</td>';
+                
+                    echo '<td>';
                     
-                echo '</td>';
+                        echo '<input type="button" value="Delete" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                        echo '<input type="button" value="Edit" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                        echo '<input type="button" value="Séléctionner fichier" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                    
+                        //form
+                        echo '<form action="" method="POST" enctype="multipart/form-data">';
+                            echo '<input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'">';
+                            echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
+                            echo '<input type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;">';
+                        echo '</form>';
+
+                        echo '</td>';
+                echo '</tr>';
                 $count_line_save++;
             }
-            echo '</tr>';
             echo '</table>';
         }
 
