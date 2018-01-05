@@ -150,11 +150,9 @@ class wacimportcsv{
         $_ppl_names = pll_languages_list(array('fields'=>'name'));
         $_ppl_slugs = pll_languages_list(array('fields'=>'slug'));
 
-        var_dump($_ppl_names);
-
         $html.= '<hr>';
         $html.= '<h2>Modifier le modèle d\'importation</h2>';
-        //METTRE NOM DU MODELE D'IMPORTATION EN COURS DE MODIFICATION $html.= '<div><strong>'..'</strong></div>';
+        $html.= '<div><strong>'.$namesauvegarde.'</strong></div>';
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
         
