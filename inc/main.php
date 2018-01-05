@@ -34,7 +34,7 @@ class wacimportcsv{
         wp_enqueue_script('wacreadcsvdocument', plugins_url('/js/wac_importcsv_admin.js', dirname(__FILE__)), array('jquery'), '0.0.1', false);
     }
     public function wacimportcsv_css_enqueue(){
-        wp_register_style('style_csv', plugins_url('/css/style_csv.css', dirname(__FILE__)), array(), '1.0', 'all');
+        wp_register_style('style_csv', plugins_url('/css/style_csv.css', dirname(__FILE__)), array(), '1.0.1', 'all');
         wp_enqueue_style('style_csv'); // Enqueue it!
     }
 
@@ -838,7 +838,7 @@ class wacimportcsv{
             if($default_value === 'notselected'){
                 $select = "selected";
             }
-            $html.= '<option value="notselected" '.$select.'>Select a field</option>';
+            $html.= '<option value="notselected" '.$select.'>Sélectionner une colonne...</option>';
 
             foreach( $fields as $field_value => $field_name ){
 
