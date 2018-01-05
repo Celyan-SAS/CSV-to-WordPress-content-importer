@@ -4,3 +4,6 @@
 .modeles_liste tbody > tr > td:first-child .modele_title{
     cursor:pointer;
 }
+.add_modele th{
+    text-align:left;
+}

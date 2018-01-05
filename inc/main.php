@@ -726,7 +726,7 @@ class wacimportcsv{
         /** form to ad url **/
         echo '<form action="" method="POST" enctype="multipart/form-data">';
 
-        echo '<table>';
+        echo '<table class="add_modele">';
             /** NAME **/
             echo '<tr>';
                 echo '<th>';
