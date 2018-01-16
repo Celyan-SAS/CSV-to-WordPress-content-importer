@@ -13,7 +13,7 @@ class wacimportcsv{
             return;
         }
         add_action('admin_menu', array($this, 'importcsv_menu'));
-        
+
         add_action ('init',array($this,'process_post'));
 
         /** add js **/
@@ -159,7 +159,7 @@ class wacimportcsv{
 
         $html.= '<hr>';
         $html.= '<h2>Modifier le modèle d\'importation</h2>';
-        $html.= '<div><strong>'.$namesauvegarde.'</strong></div>';
+        $html.= '<div class="modif_modele_name"><strong>'.$namesauvegarde.'</strong></div>';
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
 
@@ -179,7 +179,7 @@ class wacimportcsv{
         }
 
         $html.= '<form action="" method="POST">';
-        $html.= '<table>';
+        $html.= '<table class="wp-list-table widefat fixed striped modele_modifier">';
 
         $html.= '<thead>';
         $html.= '<tr>';
@@ -197,9 +197,6 @@ class wacimportcsv{
         $html.= '</thead>';
         $html.= '<tbody>';
 
-        $color_background = '#dcdcdc';
-        $color_set = 1;
-
         //////////////////
         //Add basic fields
         //////////////////
@@ -210,15 +207,8 @@ class wacimportcsv{
             'post_category'=>'Post catégorie'
         );
         foreach($array_list_fields_wp as $fieldkey=>$fieldname){
-            if($color_set){
-                $color_set = 0;
-                $color = 'background-color: '.$color_background.';';
-            }else{
-                $color_set = 1;
-                $color = '';
-            }
             //LINE -------------------------
-            $html.= '<tr style="'.$color.'">';
+            $html.= '<tr>';
 
             //TITLE COL --------------------------
             $html.= '<td>';
@@ -266,16 +256,9 @@ class wacimportcsv{
 
 
             //TODO SECURIT21 SI PAS PPL
-            //get the default
-            if($color_set){
-                $color_set = 0;
-                $color = 'background-color: '.$color_background.';';
-            }else{
-                $color_set = 1;
-                $color = '';
-            }
+
             //LINE -------------------------
-            $html.= '<tr style="'.$color.'">';
+            $html.= '<tr>';
 
             //TITLE COL --------------------------
             $html.= '<td>';
@@ -300,7 +283,7 @@ class wacimportcsv{
 
             if(isset($data_taxonomy->hierarchical) && $data_taxonomy->hierarchical==1){
 
-                $html.= '<tr style="'.$color.'">'; 
+                $html.= '<tr>';
                 //TITLE COL --------------------------
                 $html.= '<td>';
                 $html.= '<strong style="width: 250px;display: inline-block;">';
@@ -328,15 +311,9 @@ class wacimportcsv{
         /////////////////
         //Add Post status
         /////////////////
-        if($color_set){
-            $color_set = 0;
-            $color = 'background-color: '.$color_background.';';
-        }else{
-            $color_set = 1;
-            $color = '';
-        }
+
         //LINE -------------------------
-        $html.= '<tr style="'.$color.'">';
+        $html.= '<tr>';
 
         //COL TITLE ----------------
         $html.= '<td>';
@@ -366,15 +343,8 @@ class wacimportcsv{
         //Add acf fields
         ////////////////
         foreach( $fields_acf as $field_slug => $field_data ){
-            if($color_set){
-                $color_set = 0;
-                $color = 'background-color: '.$color_background.';';
-            }else{
-                $color_set = 1;
-                $color = '';
-            }
             //LINE--------------------------
-            $html.= '<tr style="'.$color.'">';
+            $html.= '<tr>';
 
             //COL ----------------------
             $html.= '<td>';
@@ -411,7 +381,7 @@ class wacimportcsv{
         $html.= '</div>';
         $html.= '<input value="'.$namesauvegarde.'" name="namesauvegarde" type="hidden">';
         $html.= '<input value="1" name="associatecptcolumn" type="hidden">';
-        $html.= '<input class="button button-primary" type="submit" value="Mettre à jour le modèle">';
+        $html.= '<input class="button button-primary maj_modele" type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
 
 
@@ -681,11 +651,11 @@ class wacimportcsv{
             echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
             echo '<thead>';
             echo '<tr class="manage-column column-title column-primary">';
-            
+
             if($_GET['details']){
                 echo '<th>Nom</th>';
             }
-            
+
             echo '<th>Type de contenu</th>';
             echo '<th>Action</th>';
             echo '</tr>';
@@ -693,14 +663,14 @@ class wacimportcsv{
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
                 echo '<tr class="modele" id="wac_'.$key_ls.'">';
-                
+
                 if($_GET['details']){
                     echo '<td class="modele_name has-row-actions">';
-                        echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
-                        echo '<div class="row-actions">';
-                            echo '<span class="edit"><input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'"> | </span>';
-                            echo '<span class="trash"><input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'"></span>';
-                        echo '</div>';
+                    echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
+                    echo '<div class="row-actions">';
+                    echo '<span class="edit"><input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'"> | </span>';
+                    echo '<span class="trash"><input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'"></span>';
+                    echo '</div>';
                     echo '</td>';
                 }
 
@@ -734,106 +704,106 @@ class wacimportcsv{
         echo '<form action="" method="POST" enctype="multipart/form-data">';
 
         echo '<table class="add_modele">';
-            /** NAME **/
-            echo '<tr>';
-                echo '<th>';
-                    echo 'Nom du modèle';
-                echo '</th>';
-                echo '<td>';
-                    echo '<input type="text" name="namesauvegarde" >';
-                echo '</td>';
-            echo '</tr>';
+        /** NAME **/
+        echo '<tr>';
+        echo '<th>';
+        echo 'Nom du modèle';
+        echo '</th>';
+        echo '<td>';
+        echo '<input type="text" name="namesauvegarde" >';
+        echo '</td>';
+        echo '</tr>';
 
-            /** STARTING LINE **/
-            echo '<tr>';
-                echo '<th>';
-                    echo 'N° de la ligne contenant le nom des colonnes';
-                echo '</th>';
-                echo '<td>';
-                    echo '<input type="text" name="startline" value="1" >';
-                echo '</td>';
-            echo '</tr>';
+        /** STARTING LINE **/
+        echo '<tr>';
+        echo '<th>';
+        echo 'N° de la ligne contenant le nom des colonnes';
+        echo '</th>';
+        echo '<td>';
+        echo '<input type="text" name="startline" value="1" >';
+        echo '</td>';
+        echo '</tr>';
 
-            /** TYPE ACTION POUR ABSENT **/
-            echo '<tr>';
-                echo '<th>';
-                    echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:';
-                echo '</th>';
-                echo '<td>';
-                    echo '<select name="actionligneabsente">';
-                        echo '<option value="ignorerpost">Conserver le contenu existant</option>';
-                        echo '<option value="deletepost">Supprimer le contenu existant</option>';
-                    echo '</select>';
-                echo '</td>';
-            echo '</tr>';
+        /** TYPE ACTION POUR ABSENT **/
+        echo '<tr>';
+        echo '<th>';
+        echo 'Si un contenu n\'est plus présent dans le fichier importé lors d\'une mise à jour:';
+        echo '</th>';
+        echo '<td>';
+        echo '<select name="actionligneabsente">';
+        echo '<option value="ignorerpost">Conserver le contenu existant</option>';
+        echo '<option value="deletepost">Supprimer le contenu existant</option>';
+        echo '</select>';
+        echo '</td>';
+        echo '</tr>';
 
-            /** TYPE separateur **/
-            echo '<tr>';
-                echo '<th>';
-                    echo 'Séparateur de champ';
-                echo '</th>';
-                echo '<td>';
-                    //echo '<input type="text" name="separatortype" value="," >';
-                    echo '<select name="">';
-                        echo '<option value=",">, (virgule)</option>';
-                        echo '<option value=";">; (point virgule)</option>';
-                    echo '</select>';
-                echo '</td>';
-            echo '</tr>';
+        /** TYPE separateur **/
+        echo '<tr>';
+        echo '<th>';
+        echo 'Séparateur de champ';
+        echo '</th>';
+        echo '<td>';
+        //echo '<input type="text" name="separatortype" value="," >';
+        echo '<select name="">';
+        echo '<option value=",">, (virgule)</option>';
+        echo '<option value=";">; (point virgule)</option>';
+        echo '</select>';
+        echo '</td>';
+        echo '</tr>';
 
-            /** CPT **/
-            //Get all the cpt
-            $args_cpt = array('public'   => true);
-            $list_cpt = get_post_types($args_cpt);
-            echo '<tr>';
-                echo '<th>';
-                    echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
-                echo '</th>';
-                echo '<td>';
-                    echo '<select name="cptsave" style="width:150px;">';
-                        echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
-                        foreach($list_cpt as $cpt_code=>$cpt_name){
-                            $selected = '';
-                            if($cpt_code == $cptlinked){
-                                $selected = 'selected';
-                            }
-                            echo '<option value="'.$cpt_code.'" '.$selected.'>'.$cpt_name.'</option>';
-                        }
-                    echo '</select>';
-                echo '</td>';
-            echo '</tr>';
+        /** CPT **/
+        //Get all the cpt
+        $args_cpt = array('public'   => true);
+        $list_cpt = get_post_types($args_cpt);
+        echo '<tr>';
+        echo '<th>';
+        echo '<div>'.__('Contenu à importer : ',',importcsv').'</div>';
+        echo '</th>';
+        echo '<td>';
+        echo '<select name="cptsave" style="width:150px;">';
+        echo '<option value="">'.__('Contenu à importer ',',importcsv').'</option>';
+        foreach($list_cpt as $cpt_code=>$cpt_name){
+            $selected = '';
+            if($cpt_code == $cptlinked){
+                $selected = 'selected';
+            }
+            echo '<option value="'.$cpt_code.'" '.$selected.'>'.$cpt_name.'</option>';
+        }
+        echo '</select>';
+        echo '</td>';
+        echo '</tr>';
 
-            /** SELECT A AUTHOR **/
-            $args_users = array(
-                'role__in'     => array('administrator','editor','author')
-            );
-            $all_users = get_users( $args_users );
-            echo '<tr>';
-                echo '<th>';
-                    echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
-                echo '</th>';
-                echo '<td>';
-                    echo '<select name="authorsave" style="width:150px;">';
-                        echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
-                        foreach($all_users as $user){
-                            $selected = '';
-                            if($user->ID == $author_selected){
-                                $selected = 'selected';
-                            }
-                            echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
-                        }
-                    echo '</select>';
-                echo '</td>';
-            echo '</tr>';
+        /** SELECT A AUTHOR **/
+        $args_users = array(
+            'role__in'     => array('administrator','editor','author')
+        );
+        $all_users = get_users( $args_users );
+        echo '<tr>';
+        echo '<th>';
+        echo '<div>'.__('Auteur par défaut : ',',importcsv').'</div>';
+        echo '</th>';
+        echo '<td>';
+        echo '<select name="authorsave" style="width:150px;">';
+        echo '<option value="">'.__('Auteur par défaut ',',importcsv').'</option>';
+        foreach($all_users as $user){
+            $selected = '';
+            if($user->ID == $author_selected){
+                $selected = 'selected';
+            }
+            echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
+        }
+        echo '</select>';
+        echo '</td>';
+        echo '</tr>';
 
-            echo '<tr>';
-                echo '<th>';
-                    echo '<span><input type="file" name="wacfilecsv"></span>';
-                echo '</th>';
-                echo '<td>';
-                    echo '<input class="button button-primary" type="submit" value="Créer un modèle à partir de ce fichier">';
-                echo '</td>';
-            echo '</tr>';
+        echo '<tr>';
+        echo '<th>';
+        echo '<span><input type="file" name="wacfilecsv"></span>';
+        echo '</th>';
+        echo '<td>';
+        echo '<input class="button button-primary" type="submit" value="Créer un modèle à partir de ce fichier">';
+        echo '</td>';
+        echo '</tr>';
 
         echo '</table>';
         echo '</form>';

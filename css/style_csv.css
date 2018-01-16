@@ -1,3 +1,8 @@
+hr{
+    clear:both;
+    margin:20px 0;
+}
+
 .modeles_liste tbody > tr > td:first-child{
     font-size:15px;
 }
@@ -30,4 +35,26 @@
 }
 .modeles_liste .modele td.modele_name .trash input:hover{
     color: #dc3232;
+}
+.modele_modifier select,
+.modele_modifier input {
+    width: 100%;
+    max-width: 100%;
+}
+.modif_modele_name{
+    display: block;
+    text-align: center;
+    border-top: 1px solid #e5e5e5;
+    border-left: 1px solid #e5e5e5;
+    border-right: 1px solid #e5e5e5;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+    background: #f9f9f9;
+    padding: 10px;
+}
+.modif_modele_name strong{
+    font-size: 16px;
+}
+.maj_modele {
+    margin: 20px 0 !important;
+    float: right;
 }
