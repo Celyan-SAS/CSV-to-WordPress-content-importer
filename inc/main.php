@@ -471,7 +471,7 @@ class wacimportcsv{
             if(isset($postmeta_list[$unique_id_value]) && $postmeta_list[$unique_id_value]!=""){
                 unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
                 continue;
-            }else{
+            }else{                
                 unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
                 $message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value);
                 $ajout_post++;
@@ -546,7 +546,7 @@ class wacimportcsv{
                 $data['post_content'] = " ";
             }
 
-            /* INSERT POST */
+            /* INSERT POST */            
             $new_post_id = $this->insert_post($data);
             if($new_post_id){
 
@@ -673,15 +673,19 @@ class wacimportcsv{
         /** LIST URLS **/
         echo '<hr>';
         echo '<div id="messagepostprocess">'.$this->_message_post_process.'</div>';
-        echo '<h2>Modèles d\'importation</h2>';
         $list_urls = get_option($this->_list_save_name,false);        
         $list_decoded = array();
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
+            echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.add_query_arg( 'details', '1').'">(détails)</a>';
             echo '<table class="modeles_liste">';
             echo '<thead>';
             echo '<tr>';
-            echo '<th>Nom</th>';
+            
+            if($_GET['details']){
+                echo '<th>Nom</th>';
+            }
+            
             echo '<th>Type de contenu</th>';
             echo '<th>Action</th>';
             echo '</tr>';
@@ -689,13 +693,16 @@ class wacimportcsv{
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
                 echo '<tr id="wac_'.$key_ls.'">';
-                echo '<td>';
-                echo '<strong class="modele_title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
-                echo '<div>';
-                echo '<input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                echo '<input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                echo '</div>';
-                echo '</td>';
+                
+                if($_GET['details']){
+                    echo '<td>';
+                        echo '<strong class="modele_title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
+                        echo '<div>';
+                            echo '<input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                            echo '<input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                        echo '</div>';
+                    echo '</td>';
+                }
 
                 echo '<td>';
                 echo '<span>'.$ls['cpt'].'</span>';
@@ -766,7 +773,11 @@ class wacimportcsv{
                     echo 'Séparateur de champ';
                 echo '</th>';
                 echo '<td>';
-                    echo '<input type="text" name="separatortype" value="," >';
+                    //echo '<input type="text" name="separatortype" value="," >';
+                    echo '<select name="">';
+                        echo '<option value=",">, (virgule)</option>';
+                        echo '<option value=";">; (point virgule)</option>';
+                    echo '</select>';
                 echo '</td>';
             echo '</tr>';
 
