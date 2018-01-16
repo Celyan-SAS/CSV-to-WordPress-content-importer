@@ -183,13 +183,13 @@ class wacimportcsv{
 
         $html.= '<thead>';
         $html.= '<tr>';
-        $html.= '<th>';
+        $html.= '<th class="column-primary">';
         $html.= 'Méta-données';
         $html.= '</th>';
 
-        foreach($_ppl_slugs as $keyppl=>$ppl_slug){
+        foreach($_ppl_names as $keyppl=>$ppl_name){
             $html.= '<th>';
-            $html.= $ppl_slug;
+            $html.= $ppl_name;
             $html.= '</th>';
         }
 
@@ -219,7 +219,7 @@ class wacimportcsv{
 
             //COL BY LANGUAGE --------------------
             foreach($_ppl_names as $keyppl=>$ppl_name){
-                $html.= '<td>';
+                $html.= '<td data-colname="'.$ppl_name.'">';
                 $default_value = "notselected";
                 if($association_list[$_ppl_slugs[$keyppl]][$fieldkey] !== null){
                     $default_value = $association_list[$_ppl_slugs[$keyppl]][$fieldkey];
@@ -268,9 +268,8 @@ class wacimportcsv{
             $html.= '</td>';
 
             //COL BY LANGUAGE --------------------
-            foreach($_ppl_slugs as $keyppl=>$ppl_name){
-
-                $html.= '<td>';
+            foreach($_ppl_names as $keyppl=>$ppl_name){
+                $html.= '<td data-colname="'.$ppl_name.'">';
                 $default_value = "notselected";
                 if($association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc] !== null){
                     $default_value = $association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc];
@@ -291,9 +290,9 @@ class wacimportcsv{
                 $html.= '</strong>';
                 $html.= '</td>';
 
-                foreach($_ppl_slugs as $keyppl=>$ppl_name){
+                foreach($_ppl_names as $keyppl=>$ppl_name){
                     //create sous rubrique
-                    $html.= '<td>';
+                    $html.= '<td data-colname="'.$ppl_name.'">';
                     $default_value = "notselected";
                     if($association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc] !== null){
                         $default_value = $association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc];
@@ -324,7 +323,7 @@ class wacimportcsv{
 
         //COL ----------------------
         foreach($_ppl_names as $keyppl=>$ppl_name){
-            $html.= '<td>';
+            $html.= '<td data-colname="'.$ppl_name.'">';
             $list_status = array(
                 'publish'=>'Publié',
                 'draft'=>'Brouillon'
@@ -356,7 +355,7 @@ class wacimportcsv{
 
             //COL-----------------------
             foreach($_ppl_names as $keyppl=>$ppl_name){
-                $html.= '<td>';
+                $html.= '<td data-colname="'.$ppl_name.'">';
                 $default_value = "notselected";
                 if($association_list[$_ppl_slugs[$keyppl]][$field_data['key']] !== null){
                     $default_value = $association_list[$_ppl_slugs[$keyppl]][$field_data['key']];
@@ -653,7 +652,7 @@ class wacimportcsv{
             echo '<tr class="manage-column column-title column-primary">';
 
             if($_GET['details']){
-                echo '<th>Nom</th>';
+                echo '<th class="column-primary">Nom</th>';
             }
 
             echo '<th>Type de contenu</th>';
@@ -665,20 +664,21 @@ class wacimportcsv{
                 echo '<tr class="modele" id="wac_'.$key_ls.'">';
 
                 if($_GET['details']){
-                    echo '<td class="modele_name has-row-actions">';
+                    echo '<td class="modele_name has-row-actions column-primary">';
                     echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
                     echo '<div class="row-actions">';
                     echo '<span class="edit"><input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'"> | </span>';
                     echo '<span class="trash"><input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'"></span>';
                     echo '</div>';
+                    echo '<button type="button" class="toggle-row"><span class="screen-reader-text">Afficher plus de détails</span></button>';
                     echo '</td>';
                 }
 
-                echo '<td class="slug column-slug">';
+                echo '<td class="slug column-slug column-cpt" data-colname="Type de contenu">';
                 echo '<span>'.$ls['cpt'].'</span>';
                 echo '</td>';
-                echo '<td>';
-                echo '<input class="button" type="button" value="Importer" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '<td class="column-action" data-colname="Action">';
+                echo '<input class="button" type="button" value="Importer" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;line-height: 15px;">';
 
                 //form
                 echo '<form action="" method="POST" enctype="multipart/form-data">';

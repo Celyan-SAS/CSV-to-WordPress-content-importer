@@ -58,3 +58,34 @@ hr{
     margin: 20px 0 !important;
     float: right;
 }
+
+@media screen and (max-width:767px){
+    .add_modele,
+    .add_modele tbody,
+    .add_modele tbody tr,
+    .add_modele tbody tr th,
+    .add_modele tbody tr td,
+    .add_modele tbody tr td input:not([type="submit"]),
+    .add_modele tbody tr td select{
+        display:block;
+        width:100% !important;
+        box-sizing: border-box;
+    }
+    .add_modele tbody tr td{
+        margin-bottom:10px;
+    }
+    .add_modele tbody tr td input[type="submit"]{
+        margin-top:15px;
+    }
+    .add_modele tbody tr td input[type="file"] {
+        font-size: 14px;
+    }
+
+    .modele_modifier select, .modele_modifier input {
+        width: 67%;
+        margin-left: 32%;
+    }
+    .modele_modifier td:not(.column-primary)::before{
+        line-height:37px;
+    }
+}
