@@ -411,7 +411,7 @@ class wacimportcsv{
         $html.= '</div>';
         $html.= '<input value="'.$namesauvegarde.'" name="namesauvegarde" type="hidden">';
         $html.= '<input value="1" name="associatecptcolumn" type="hidden">';
-        $html.= '<input type="submit" value="Mettre à jour le modèle">';
+        $html.= '<input class="button button-primary" type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
 
 
@@ -678,9 +678,9 @@ class wacimportcsv{
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
             echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.add_query_arg( 'details', '1').'">(détails)</a>';
-            echo '<table class="modeles_liste">';
+            echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
             echo '<thead>';
-            echo '<tr>';
+            echo '<tr class="manage-column column-title column-primary">';
             
             if($_GET['details']){
                 echo '<th>Nom</th>';
@@ -692,29 +692,29 @@ class wacimportcsv{
             echo '</thead>';
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
-                echo '<tr id="wac_'.$key_ls.'">';
+                echo '<tr class="modele" id="wac_'.$key_ls.'">';
                 
                 if($_GET['details']){
-                    echo '<td>';
-                        echo '<strong class="modele_title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
-                        echo '<div>';
-                            echo '<input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
-                            echo '<input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                    echo '<td class="modele_name has-row-actions">';
+                        echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
+                        echo '<div class="row-actions">';
+                            echo '<span class="edit"><input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'"> | </span>';
+                            echo '<span class="trash"><input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'"></span>';
                         echo '</div>';
                     echo '</td>';
                 }
 
-                echo '<td>';
+                echo '<td class="slug column-slug">';
                 echo '<span>'.$ls['cpt'].'</span>';
                 echo '</td>';
                 echo '<td>';
-                echo '<input type="button" value="Importer" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
+                echo '<input class="button" type="button" value="Importer" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;">';
 
                 //form
                 echo '<form action="" method="POST" enctype="multipart/form-data">';
                 echo '<input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'">';
                 echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
-                echo '<input type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;">';
+                echo '<input class="button" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;">';
                 echo '</form>';
 
                 echo '</td>';
@@ -831,7 +831,7 @@ class wacimportcsv{
                     echo '<span><input type="file" name="wacfilecsv"></span>';
                 echo '</th>';
                 echo '<td>';
-                    echo '<input type="submit" value="Créer un modèle à partir de ce fichier">';
+                    echo '<input class="button button-primary" type="submit" value="Créer un modèle à partir de ce fichier">';
                 echo '</td>';
             echo '</tr>';
 
