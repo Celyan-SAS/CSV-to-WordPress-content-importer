@@ -7,3 +7,27 @@
 .add_modele th{
     text-align:left;
 }
+.modeles_liste .modele td.modele_name input {
+    border: 0;
+    background: 0;
+    padding: 0;
+    width: auto;
+    height: auto;
+    font-size: 12px;
+    cursor: pointer;
+    color: #0073aa;
+}
+.modeles_liste .modele td.modele_name strong{
+    color: #0073aa;
+    cursor:pointer;
+}
+.modeles_liste .modele td.modele_name strong:hover,
+.modeles_liste .modele td.modele_name input:hover{
+    color: #00a0d2;
+}
+.modeles_liste .modele td.modele_name .trash input{
+    color: #a00;
+}
+.modeles_liste .modele td.modele_name .trash input:hover{
+    color: #dc3232;
+}
