@@ -59,6 +59,12 @@ hr{
     float: right;
 }
 
+input#wac_processfile_button0 {
+    height: 30px;
+    line-height: 27px;
+    margin-left: 10px;
+}
+
 @media screen and (max-width:767px){
     .add_modele,
     .add_modele tbody,
