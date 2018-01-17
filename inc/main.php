@@ -691,7 +691,7 @@ class wacimportcsv{
                 echo '<form action="" method="POST" enctype="multipart/form-data" style="display: inline-block;">';
                     echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
                     echo '<div style="display: inline-block;"><input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'"></div>';
-                    echo '<div style="display: inline-block;"><input class="button" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;"></div>';
+                    echo '<div style="display: inline-block;"><input class="button-primary" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;"></div>';
                 echo '</form>';
 
                 echo '</td>';
