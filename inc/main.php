@@ -14,7 +14,8 @@ class wacimportcsv{
         }
         add_action('admin_menu', array($this, 'importcsv_menu'));
 
-        add_action ('init',array($this,'process_post'));
+        //add_action ('init',array($this,'process_post'));
+        add_action ('admin_init',array($this,'process_post'));
 
         /** add js **/
         add_action('admin_enqueue_scripts', array($this,'wacimportcsv_scripts_enqueue'));
@@ -80,7 +81,12 @@ class wacimportcsv{
 
             //get first line of csv
             $data_first_line = $this->read_csv($_FILES["wacfilecsv"]["tmp_name"],$_POST['startline'],$_POST['separatortype'],0);   
-
+            $first_line = array();
+            foreach($data_first_line as $dfl){
+                $first_line = $dfl;
+                break;
+            }
+            
             /* STARTING LINE */
             $list_decoded[$_POST['namesauvegarde']]['startline'] = $_POST['startline'];
             /* SAVE AUTHOR */
@@ -88,7 +94,7 @@ class wacimportcsv{
             /* SAVE CPT */
             $list_decoded[$_POST['namesauvegarde']]['cpt'] = $_POST['cptsave'];
             /* save first line */
-            $list_decoded[$_POST['namesauvegarde']]['firstline'] = $data_first_line[0];
+            $list_decoded[$_POST['namesauvegarde']]['firstline'] = $first_line;
             /* save first line */
             $list_decoded[$_POST['namesauvegarde']]['separatortype'] = $_POST['separatortype'];
             /* save first line */
@@ -113,7 +119,6 @@ class wacimportcsv{
             $to_save_data = array();
             foreach($alldata as $idcol=>$data){
                 $id_data = explode('|',$idcol);
-                //TODO SECURIT2 POUR PPL
                 //for taxo
                 if(preg_match('#taxo_#', $id_data[0])){
                     //[language][taxo][id col] = data
@@ -149,14 +154,40 @@ class wacimportcsv{
             $this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave']);
         }        
     }    
-
-    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list){
+    
+    /**
+     * needs to return an array of languages slug/names
+     */
+    public function get_languages_cols(){
+        $list = array();
+        //test if we have pll
+        if(is_plugin_active('polylang/polylang.php')){
+            $pll_name = pll_languages_list(array('fields'=>'name'));
+            $pll_slug = pll_languages_list(array('fields'=>'slug'));
+            foreach($pll_name as $key=>$val){
+                $list[$pll_slug[$key]] = $val;
+            }
+        }
+        
+        //todo can put another kind of language handler
+        
+        //else return defaults
+        if(count($list)<=0){
+            $list["dflt"] = "Defaut";
+        }        
+        
+        return $list;
+    }
+    
+    /*
+     * Donne l'html tableau de modification des l'association col/champ
+     */
+    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array()){
 
         $html = '';
 
-        $_ppl_names = pll_languages_list(array('fields'=>'name'));
-        $_ppl_slugs = pll_languages_list(array('fields'=>'slug'));
-
+        $cols_list = $this->get_languages_cols();        
+        
         $html.= '<hr>';
         $html.= '<h2>Modifier le modèle d\'importation</h2>';
         $html.= '<div class="modif_modele_name"><strong>'.$namesauvegarde.'</strong></div>';
@@ -187,7 +218,7 @@ class wacimportcsv{
         $html.= 'Méta-données';
         $html.= '</th>';
 
-        foreach($_ppl_names as $keyppl=>$ppl_name){
+        foreach($cols_list as $keyppl=>$ppl_name){
             $html.= '<th>';
             $html.= $ppl_name;
             $html.= '</th>';
@@ -218,24 +249,14 @@ class wacimportcsv{
             $html.= '</td>';
 
             //COL BY LANGUAGE --------------------
-            foreach($_ppl_names as $keyppl=>$ppl_name){
+            foreach($cols_list as $keyppl=>$ppl_name){
                 $html.= '<td data-colname="'.$ppl_name.'">';
                 $default_value = "notselected";
-                if($association_list[$_ppl_slugs[$keyppl]][$fieldkey] !== null){
-                    $default_value = $association_list[$_ppl_slugs[$keyppl]][$fieldkey];
+                if(isset($association_list[$keyppl]) && $association_list[$keyppl][$fieldkey] !== null){
+                    $default_value = $association_list[$keyppl][$fieldkey];
                 }
-                $html.= $this->create_select_form($titles, $fieldkey.'|'.$_ppl_slugs[$keyppl],$default_value);
+                $html.= $this->create_select_form($titles, $fieldkey.'|'.$keyppl,$default_value);
 
-                //                    $default_value = "";
-                //                    if($association_list[$fieldkey.'_text'] !== null && $fieldkey!='id_unique'){
-                //                       $default_value = $association_list[$fieldkey.'_text'];
-                //                    }
-
-                //                    if($fieldkey!='id_unique'){
-                //                        $html.= '<input type="text" name="'.$fieldkey.'_text_'.$_ppl_slugs[$fieldkey].'" value="'.$default_value.'">';
-                //                    }else{
-                //                        $html.= "Si non associé, un identifiant unique sera automatiquement généré";
-                //                    }
                 $html.= '</td>';
             }
 
@@ -268,13 +289,13 @@ class wacimportcsv{
             $html.= '</td>';
 
             //COL BY LANGUAGE --------------------
-            foreach($_ppl_names as $keyppl=>$ppl_name){
+            foreach($cols_list as $keyppl=>$ppl_name){
                 $html.= '<td data-colname="'.$ppl_name.'">';
                 $default_value = "notselected";
-                if($association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc] !== null){
-                    $default_value = $association_list[$_ppl_slugs[$keyppl]]['taxonomie'][$taxo_assoc];
+                if(isset($association_list[$keyppl]) && $association_list[$keyppl]['taxonomie'][$taxo_assoc] !== null){
+                    $default_value = $association_list[$keyppl]['taxonomie'][$taxo_assoc];
                 }
-                $html.= $this->create_select_form($titles, "taxo_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
+                $html.= $this->create_select_form($titles, "taxo_".$taxo_assoc.'|'.$keyppl,$default_value);
                 $html.= '</td>';
             }
             $html.= '</tr>'; 
@@ -290,14 +311,14 @@ class wacimportcsv{
                 $html.= '</strong>';
                 $html.= '</td>';
 
-                foreach($_ppl_names as $keyppl=>$ppl_name){
+                foreach($cols_list as $keyppl=>$ppl_name){
                     //create sous rubrique
                     $html.= '<td data-colname="'.$ppl_name.'">';
                     $default_value = "notselected";
-                    if($association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc] !== null){
-                        $default_value = $association_list[$_ppl_slugs[$keyppl]]['subtaxonomie'][$taxo_assoc];
+                    if(isset($association_list[$keyppl]) && $association_list[$keyppl]['subtaxonomie'][$taxo_assoc] !== null){
+                        $default_value = $association_list[$keyppl]['subtaxonomie'][$taxo_assoc];
                     }
-                    $html.= $this->create_select_form($titles, "subt_".$taxo_assoc.'|'.$_ppl_slugs[$keyppl],$default_value);
+                    $html.= $this->create_select_form($titles, "subt_".$taxo_assoc.'|'.$keyppl,$default_value);
                     $html.= '</td>';  
                 }
 
@@ -322,17 +343,17 @@ class wacimportcsv{
         $html.= '</td>';
 
         //COL ----------------------
-        foreach($_ppl_names as $keyppl=>$ppl_name){
+        foreach($cols_list as $keyppl=>$ppl_name){
             $html.= '<td data-colname="'.$ppl_name.'">';
             $list_status = array(
                 'publish'=>'Publié',
                 'draft'=>'Brouillon'
             );
             $default_value = "notselected";
-            if($association_list[$_ppl_slugs[$keyppl]]['post_status'] !== null){
-                $default_value = $association_list[$_ppl_slugs[$keyppl]]['post_status'];
+            if(isset($association_list[$keyppl]) && $association_list[$keyppl]['post_status'] !== null){
+                $default_value = $association_list[$keyppl]['post_status'];
             }
-            $html.= $this->create_select_form($list_status, 'post_status|'.$_ppl_slugs[$keyppl],$association_list[$_ppl_slugs[$keyppl]]['post_status']);
+            $html.= $this->create_select_form($list_status, 'post_status|'.$keyppl,$default_value);
             $html.= '</td>';
         }
 
@@ -354,14 +375,14 @@ class wacimportcsv{
             $html.= '</td>';
 
             //COL-----------------------
-            foreach($_ppl_names as $keyppl=>$ppl_name){
+            foreach($cols_list as $keyppl=>$ppl_name){
                 $html.= '<td data-colname="'.$ppl_name.'">';
                 $default_value = "notselected";
-                if($association_list[$_ppl_slugs[$keyppl]][$field_data['key']] !== null){
-                    $default_value = $association_list[$_ppl_slugs[$keyppl]][$field_data['key']];
+                if(isset($association_list[$keyppl]) && $association_list[$keyppl][$field_data['key']] !== null){
+                    $default_value = $association_list[$keyppl][$field_data['key']];
                 }
 
-                $html.= $this->create_select_form($titles, $field_data['key'].'|'.$_ppl_slugs[$keyppl],$default_value);
+                $html.= $this->create_select_form($titles, $field_data['key'].'|'.$keyppl,$default_value);
 
                 $default_value = "";
                 //                        if($association_list[$field_data['key'].'_text'] !== null){
@@ -423,7 +444,10 @@ class wacimportcsv{
 
         //update post meta "yd_csv_import_line_id"
         $association_list = $data_save['association'];
-        $id_postmeta = $association_list['id_unique']; 
+        $id_postmeta = "notselected";
+        if(isset($association_list['id_unique'])){
+            $id_postmeta = $association_list['id_unique'];
+        }
 
         $ajout_post = 0;
         $delete_post = 0;
@@ -491,12 +515,20 @@ class wacimportcsv{
             $data = array();
             //create a post
             $list_acf = array();
+            
             foreach($association_list as $key_al => $value_al){
                 if(isset($value_al) && ($value_al == "notselected" || $value_al=="" ) ){
                     continue;
                 }
+                //will be treated afdter
+                if(isset($key_al) && ($key_al=="subtaxonomie" || $key_al=="taxonomie")){
+                    continue;
+                }
+                
                 //$association_list[$key_al] gives the key to seek
-                $data[$key_al] = $line[$value_al];
+                if(isset($line[$value_al])){
+                    $data[$key_al] = $line[$value_al];
+                }
 
                 if(preg_match('#field_#', $key_al)){
                     $key_al = str_replace('_text', '', $key_al);
@@ -521,19 +553,22 @@ class wacimportcsv{
 
                 //set language if there is one;
                 if($language_slug !== 0){
-                    pll_set_post_language($new_post_id, $language_slug);
-
-                    //array to save later to associate posts between them
-                    $list_assoc_language[$language_slug] = $new_post_id;
+                    if(is_plugin_active('polylang/polylang.php')){
+                        pll_set_post_language($new_post_id, $language_slug);
+                        //array to save later to associate posts between them
+                        $list_assoc_language[$language_slug] = $new_post_id;
+                    }
                 }
 
-                $category_slug = $line[$association_list['post_category']];
-                if($category_slug && $category_slug != ""){
-                    $the_cat_id = get_category_by_slug( $category_slug );
-                    if($the_cat_id && $the_cat_id!=""){
-                        wp_set_post_categories( $new_post_id, $the_cat_id->term_id);
-                    }
-                }            
+                if(isset($association_list['post_category']) && isset($line[$association_list['post_category']])){
+                    $category_slug = $line[$association_list['post_category']];
+                    if($category_slug && $category_slug != ""){
+                        $the_cat_id = get_category_by_slug( $category_slug );
+                        if($the_cat_id && $the_cat_id!=""){
+                            wp_set_post_categories( $new_post_id, $the_cat_id->term_id);
+                        }
+                    }            
+                }
                 /* add the postmeta of unique csv id */
                 update_post_meta( $new_post_id, $this->_wacmetakey, $unique_id_value);
 
@@ -541,6 +576,11 @@ class wacimportcsv{
                 foreach($association_list['taxonomie'] as $key_taxo=>$taxo_value){
                     $list_terms = array();
 
+                    if($taxo_value == "notselected"){
+                        continue;
+                    }
+                    
+                    
                     if($line[$taxo_value] && $line[$taxo_value]!=""){
                         $term_data = get_term_by('name',$line[$taxo_value],$key_taxo);
                         if(isset($term_data->term_id)){
@@ -556,7 +596,7 @@ class wacimportcsv{
                         $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
                         if($subtaxo_value && $subtaxo_value!="" && $line[$subtaxo_value]!=""){
                             $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
-                            if($subterm_data->term_id){
+                            if(isset($subterm_data->term_id) && $subterm_data->term_id){
                                 $list_terms[] = $subterm_data->term_id;
                             }else{
                                 //$list_terms[] = $line[$subtaxo_value];
@@ -579,8 +619,10 @@ class wacimportcsv{
 
         }//end foreach language
 
-        //after loop associate all posts between them
-        pll_save_post_translations($list_assoc_language);
+        if(is_plugin_active('polylang/polylang.php')){
+            //after loop associate all posts between them
+            pll_save_post_translations($list_assoc_language);
+        }
 
         return $message;
     }
@@ -752,7 +794,7 @@ class wacimportcsv{
             echo '</th>';
             echo '<td>';
             //echo '<input type="text" name="separatortype" value="," >';
-            echo '<select name="">';
+            echo '<select name="separatortype">';
             echo '<option value=",">, (virgule)</option>';
             echo '<option value=";">; (point virgule)</option>';
             echo '</select>';
@@ -825,6 +867,7 @@ class wacimportcsv{
         if(isset($fields) && $fields != ""){
             $html.= '<select name="'.$select_name.'">';
 
+            $select = "";
             if($default_value === 'notselected'){
                 $select = "selected";
             }
