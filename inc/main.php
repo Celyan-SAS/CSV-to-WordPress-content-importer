@@ -500,7 +500,8 @@ class wacimportcsv{
             $message.= "Pour le post : ".get_the_title($idpostml)." <a href='".$url."'>$url</a><br>";
             $message.= implode('',$ml);
         }        
-        $t = wp_mail($to,$subject,$message);
+        $headers = array('Content-Type: text/html; charset=UTF-8');
+        $t = wp_mail($to,$subject,$message,$headers);
     }
 
     public function create_post($line,$list_decoded,$key,$unique_id_value){   
