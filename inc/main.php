@@ -691,12 +691,14 @@ class wacimportcsv{
             $list_decoded = json_decode($list_urls,true);
             
             if(isset($_GET['details'])){
+                $titreliendetails = "Masquer les détails";
                 $detailsurl = remove_query_arg( 'details');
             }else{
+                $titreliendetails = "Détails";
                 $detailsurl = add_query_arg( 'details', '1');
             }
             
-            echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.$detailsurl.'">(détails)</a>';
+            echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.$detailsurl.'">('.$titreliendetails.')</a>';
             echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
             echo '<thead>';
             echo '<tr class="manage-column column-title column-primary">';
@@ -728,13 +730,13 @@ class wacimportcsv{
                 echo '<span>'.$ls['cpt'].'</span>';
                 echo '</td>';
                 echo '<td class="column-action" data-colname="Action">';
-                echo '<input class="button" type="button" value="Importer" id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;line-height: 15px;">';
+                echo '<input class="button" type="button" value="Fichier..." id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;line-height: 15px;">';
 
                 //form
                 echo '<form action="" method="POST" enctype="multipart/form-data" style="display: inline-block;">';
                     echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
                     echo '<div style="display: inline-block;"><input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'"></div>';
-                    echo '<div style="display: inline-block;"><input class="button-primary" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Process fichier" style="display:none;"></div>';
+                    echo '<div style="display: inline-block;"><input class="button-primary" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Importer" style="display:none;"></div>';
                 echo '</form>';
 
                 echo '</td>';
