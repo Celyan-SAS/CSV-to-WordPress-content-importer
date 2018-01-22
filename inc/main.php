@@ -45,7 +45,7 @@ class wacimportcsv{
         $row_count = 0;
         if (($handle = fopen($file, "r")) !== FALSE) {
             while (($data = fgetcsv($handle, 0, $separatortype)) !== FALSE) {
-
+                $data = array_map("utf8_encode", $data); //added
                 //zap x lines
                 if($startingline!=0 && $row_count<$startingline){
                     $row_count++;
@@ -439,7 +439,7 @@ class wacimportcsv{
         $list_decoded = json_decode($list_urls,true);
         $data_save = $list_decoded[$key];
 
-        $startline = $data_save['startline']+1;
+        $startline = $data_save['startline'];
         $values = $this->read_csv($file,$startline,$data_save['separatortype'],"all");
 
         //get all the keys to check witch one exist already
@@ -464,7 +464,7 @@ class wacimportcsv{
         //parse csvlines if no $this->_wacmetakey exist, create post
         $message_lines = array();
         foreach($values as $line){
-
+            
             if($id_postmeta != "notselected"){
                 $unique_id_value = md5($line[$id_postmeta]);
             }else{
@@ -481,8 +481,7 @@ class wacimportcsv{
             }
 
             //break;//ONLY FOR TEST
-        }
-
+        }        
         //mettre le post en trash si l'option a été choisi que le postmeta list a encore des elements et le post meta est correspondant
         //ignorerpost ou deletepost
         if($data_save['actionligneabsente'] == "deletepost" && count($postmeta_list)>0){ 
@@ -522,7 +521,7 @@ class wacimportcsv{
         //loop for language
         $list_assoc_language = array();
         foreach($association_list_language as $language_slug=>$association_list){
-
+            
             $data = array();
             //create a post
             $list_acf = array();
@@ -605,7 +604,7 @@ class wacimportcsv{
                     if(isset($association_list['subtaxonomie'][$key_taxo])){
 
                         $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
-                        if($subtaxo_value && $subtaxo_value!="" && $line[$subtaxo_value]!=""){
+                        if($subtaxo_value && $subtaxo_value!="" && $subtaxo_value!='notselected' &&$line[$subtaxo_value]!=""){
                             $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
                             if(isset($subterm_data->term_id) && $subterm_data->term_id){
                                 $list_terms[] = $subterm_data->term_id;
