@@ -80,7 +80,11 @@ class wacimportcsv{
             }            
 
             //get first line of csv
-            $data_first_line = $this->read_csv($_FILES["wacfilecsv"]["tmp_name"],$_POST['startline'],$_POST['separatortype'],0);   
+            $startline = intval($_POST['startline'])-1;
+            if($startline<0){
+               $startline = 0;
+            }
+            $data_first_line = $this->read_csv($_FILES["wacfilecsv"]["tmp_name"],$startline,$_POST['separatortype'],0);   
             $first_line = array();
             foreach($data_first_line as $dfl){
                 $first_line = $dfl;
@@ -106,7 +110,14 @@ class wacimportcsv{
             update_option($this->_list_save_name,$tosave);
 
             //NEXT PART         
-            $this->selectorfields($data_first_line[0],$_POST['cptsave'],$_POST['namesauvegarde']);
+            if(isset($first_line)){
+                $this->selectorfields($first_line,$_POST['cptsave'],$_POST['namesauvegarde']);
+            }else{
+                //TODO return error
+                echo "<pre>", print_r("WHY?", 1), "</pre>";
+                echo "<pre>", print_r($data_first_line, 1), "</pre>";
+                die("STOP");
+            }
         }
 
         if(isset($_POST['associatecptcolumn']) && $_POST['associatecptcolumn']!=""){
@@ -404,7 +415,6 @@ class wacimportcsv{
         $html.= '<input class="button button-primary maj_modele" type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
 
-
         /* for when used in form */
         $this->_html_admin = $html;
         /* for when used by ajax */
@@ -685,20 +695,22 @@ class wacimportcsv{
         /** LIST URLS **/
         echo '<hr>';
         echo '<div id="messagepostprocess">'.$this->_message_post_process.'</div>';
-        $list_urls = get_option($this->_list_save_name,false);        
+        
+        if(isset($_GET['details'])){
+            $titreliendetails = "Masquer les détails";
+            $detailsurl = remove_query_arg( 'details');
+        }else{
+            $titreliendetails = "Détails";
+            $detailsurl = add_query_arg( 'details', '1');
+        }
+
+        echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.$detailsurl.'">('.$titreliendetails.')</a>';
+        
+        $list_urls = get_option($this->_list_save_name,false);
+        
         $list_decoded = array();
-        if($list_urls){
+        if(count($list_urls)>0 && $list_urls!="" && isset($list_urls[0]) && $list_urls[0]!="" && $list_urls!="[]"){
             $list_decoded = json_decode($list_urls,true);
-            
-            if(isset($_GET['details'])){
-                $titreliendetails = "Masquer les détails";
-                $detailsurl = remove_query_arg( 'details');
-            }else{
-                $titreliendetails = "Détails";
-                $detailsurl = add_query_arg( 'details', '1');
-            }
-            
-            echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.$detailsurl.'">('.$titreliendetails.')</a>';
             echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
             echo '<thead>';
             echo '<tr class="manage-column column-title column-primary">';
