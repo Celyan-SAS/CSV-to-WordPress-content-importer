@@ -373,39 +373,41 @@ class wacimportcsv{
         ////////////////
         //Add acf fields
         ////////////////
-        foreach( $fields_acf as $field_slug => $field_data ){
-            //LINE--------------------------
-            $html.= '<tr>';
+		if($fields_acf && count($fields_acf)>0){
+			foreach( $fields_acf as $field_slug => $field_data ){
+				//LINE--------------------------
+				$html.= '<tr>';
 
-            //COL ----------------------
-            $html.= '<td>';
-            $html.= '<strong style="width: 250px;display: inline-block;">';
-            $html.= $field_data['label'];
-            $html.= '</strong>';
-            $html.= '<div><span>'.$field_data['name'].'</span></div>';
-            $html.= '</td>';
+				//COL ----------------------
+				$html.= '<td>';
+				$html.= '<strong style="width: 250px;display: inline-block;">';
+				$html.= $field_data['label'];
+				$html.= '</strong>';
+				$html.= '<div><span>'.$field_data['name'].'</span></div>';
+				$html.= '</td>';
 
-            //COL-----------------------
-            foreach($cols_list as $keyppl=>$ppl_name){
-                $html.= '<td data-colname="'.$ppl_name.'">';
-                $default_value = "notselected";
-                if(isset($association_list[$keyppl]) && $association_list[$keyppl][$field_data['key']] !== null){
-                    $default_value = $association_list[$keyppl][$field_data['key']];
-                }
+				//COL-----------------------
+				foreach($cols_list as $keyppl=>$ppl_name){
+					$html.= '<td data-colname="'.$ppl_name.'">';
+					$default_value = "notselected";
+					if(isset($association_list[$keyppl]) && $association_list[$keyppl][$field_data['key']] !== null){
+						$default_value = $association_list[$keyppl][$field_data['key']];
+					}
 
-                $html.= $this->create_select_form($titles, $field_data['key'].'|'.$keyppl,$default_value);
+					$html.= $this->create_select_form($titles, $field_data['key'].'|'.$keyppl,$default_value);
 
-                $default_value = "";
-                //                        if($association_list[$field_data['key'].'_text'] !== null){
-                //                           $default_value = $association_list[$field_data['key'].'_text'];
-                //                        }
+					$default_value = "";
+					//                        if($association_list[$field_data['key'].'_text'] !== null){
+					//                           $default_value = $association_list[$field_data['key'].'_text'];
+					//                        }
 
-                //$html.= '<input type="text" name="'.$field_data['key'].'_text" value="'.$default_value.'">';
-                $html.= '</td>';
-            }
+					//$html.= '<input type="text" name="'.$field_data['key'].'_text" value="'.$default_value.'">';
+					$html.= '</td>';
+				}
 
-            $html.= '</tr>';
-        }
+				$html.= '</tr>';
+			}
+		}
 
         $html.= '</tbody>';
         $html.= '</table>';
