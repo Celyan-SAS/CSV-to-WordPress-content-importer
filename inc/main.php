@@ -205,20 +205,28 @@ class wacimportcsv{
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
 
-        if(isset($cptlinked) && $cptlinked != ""){
-            $args = array(
-                'posts_per_page'   => 1,
-                'post_type'        => $cptlinked,
-                'post_status'      => "any",
-                'order'   => 'ASC',
-                'orderby' =>  'ID'
-            );
-            $cptposts = get_posts( $args );            
-            if(isset($cptposts[0]->ID) && $cptposts[0]->ID != ""){
-                //will be used later to creafte select fields
-                $fields_acf = get_field_objects($cptposts[0]->ID);
-            }
-        }
+		$list_groups = acf_get_field_groups();
+		$fields_acf = false;
+		foreach($list_groups as $LG){
+			if($LG['location'][0][0]['value'] == $cptlinked){
+				$fields_acf = acf_get_fields($LG['key']);
+			}
+		}
+		
+//        if(isset($cptlinked) && $cptlinked != ""){
+//            $args = array(
+//                'posts_per_page'   => 1,
+//                'post_type'        => $cptlinked,
+//                'post_status'      => "any",
+//                'order'   => 'ASC',
+//                'orderby' =>  'ID'
+//            );
+//            $cptposts = get_posts( $args );            
+//            if(isset($cptposts[0]->ID) && $cptposts[0]->ID != ""){
+//                //will be used later to creafte select fields
+//                $fields_acf = get_field_objects($cptposts[0]->ID);
+//            }
+//        }
 
         $html.= '<form action="" method="POST">';
         $html.= '<table class="wp-list-table widefat fixed striped modele_modifier">';
