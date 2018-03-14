@@ -465,33 +465,55 @@ class wacimportcsv{
         //update post meta "yd_csv_import_line_id"
         $association_list = $data_save['association'];
         $id_postmeta = "notselected";
-        if(isset($association_list['id_unique'])){
-            $id_postmeta = $association_list['id_unique'];
-        }
+		
+//echo "<pre>", print_r("UNIQUE ID", 1), "</pre>";
+//echo "<pre>", print_r($association_list, 1), "</pre>";
+//		
+//        if(isset($association_list['id_unique'])){
+//            $id_postmeta = $association_list['id_unique'];
+//        }
 
         $ajout_post = 0;
+		$update_post = 0;
         $delete_post = 0;
         //parse csvlines if no $this->_wacmetakey exist, create post
         $message_lines = array();
         foreach($values as $line){
             
-            if($id_postmeta != "notselected"){
-                $unique_id_value = md5($line[$id_postmeta]);
-            }else{
-                $unique_id_value = md5(implode('|',$line));
-            }
+			$association_list_language = $list_decoded[$key]['association'];
+			foreach($association_list_language as $language_slug=>$association_list){
+//echo "<pre>", print_r("HERE", 1), "</pre>";
+//echo "<pre>", print_r($id_postmeta, 1), "</pre>";
+//die('STOP -- ');
+//            if($id_postmeta != "notselected"){
+								
+				$id_postmeta = $association_list['id_unique'];
+                $unique_id_value = md5($language_slug.'_'.$line[$id_postmeta]);
+				
+//            }else{
+//                $unique_id_value = md5(implode('|',$line));
+//            }
 
-            if(isset($postmeta_list[$unique_id_value]) && $postmeta_list[$unique_id_value]!=""){
-                unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
-                continue;
-            }else{                
-                unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
-                $message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value);
+            //if(isset($postmeta_list[$unique_id_value]) && $postmeta_list[$unique_id_value]!=""){
+                //continue;
+				//Update line
+				$post_id_update = false;
+				if(isset($postmeta_list[$unique_id_value])){
+					$post_id_update = $postmeta_list[$unique_id_value];
+				}
+				
+				$message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value,$language_slug,$association_list,$post_id_update);
+				unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
+//                $update_post++;
+//            }else{                
+//                unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
+//                $message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value);
                 $ajout_post++;
-            }
-
-            //break;//ONLY FOR TEST
-        }        
+//}
+			}//end foreach language
+//break;//ONLY FOR TEST
+        }
+		
         //mettre le post en trash si l'option a été choisi que le postmeta list a encore des elements et le post meta est correspondant
         //ignorerpost ou deletepost
         if($data_save['actionligneabsente'] == "deletepost" && count($postmeta_list)>0){ 
@@ -513,6 +535,7 @@ class wacimportcsv{
         $subject = "Informations sur l'import du ".date('d-m-Y H:i:s');
 
         $message = $ajout_post.' ont été ajoutés.<br>';
+		//$message.= $update_post.' ont été mis à jour.<br>';
         $message.= $delete_post.' ont été supprimés.<br>';
         foreach($message_lines as $idpostml=>$ml){
             $url = get_edit_post_link($idpostml);
@@ -522,15 +545,14 @@ class wacimportcsv{
         $headers = array('Content-Type: text/html; charset=UTF-8');
         $t = wp_mail($to,$subject,$message,$headers);
     }
-
-    public function create_post($line,$list_decoded,$key,$unique_id_value){   
+	
+    public function create_post($line,$list_decoded,$key,$unique_id_value,$language_slug,$association_list,$post_id_update=false){   
 
         $message = array();
-        $association_list_language = $list_decoded[$key]['association'];
 
         //loop for language
         $list_assoc_language = array();
-        foreach($association_list_language as $language_slug=>$association_list){
+//        foreach($association_list_language as $language_slug=>$association_list){
             
             $data = array();
             //create a post
@@ -568,7 +590,7 @@ class wacimportcsv{
             }
 
             /* INSERT POST */            
-            $new_post_id = $this->insert_post($data);
+            $new_post_id = $this->insert_post($data,$post_id_update);
             if($new_post_id){
 
                 //set language if there is one;
@@ -637,7 +659,7 @@ class wacimportcsv{
                 }
             }//end if new post
 
-        }//end foreach language
+        //}//end foreach language
 
         if(is_plugin_active('polylang/polylang.php')){
             //after loop associate all posts between them
@@ -647,7 +669,7 @@ class wacimportcsv{
         return $message;
     }
 
-    public function insert_post($data){
+    public function insert_post($data,$post_id_update=false){
         $new_post = array();
         $new_post['post_title'] = $data['post_title'];
         $new_post['post_author'] = $data['author'];
@@ -655,7 +677,13 @@ class wacimportcsv{
         $new_post['post_type'] = $data['post_type'];
         $new_post['post_content'] = $data['post_content'];
 
-        $post_id = wp_insert_post( $new_post, true );
+		if(!$post_id_update){
+			$post_id = wp_insert_post( $new_post, true );
+		}else{
+			$new_post['ID'] = $post_id_update;
+			$post_id = $post_id_update;
+			wp_update_post( $new_post, true );
+		}
         $error_html = '';
         if (is_wp_error($post_id)) {
             $errors = $post_id->get_error_messages();
