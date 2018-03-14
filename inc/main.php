@@ -373,7 +373,7 @@ class wacimportcsv{
         ////////////////
         //Add acf fields
         ////////////////
-		if($fields_acf && count($fields_acf)>0){
+		if($fields_acf && count($fields_acf)>0){		
 			foreach( $fields_acf as $field_slug => $field_data ){
 				//LINE--------------------------
 				$html.= '<tr>';
