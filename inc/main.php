@@ -648,7 +648,7 @@ class wacimportcsv{
                     }    
 
                     //wp_set_object_terms( $new_post_id,$list_terms, $key_taxo,true); //create is doesn't exit NEED TO UNCOMENT THE LINES BEFORE
-                    $returnTerm = wp_set_post_terms( $new_post_id,$list_terms , $key_taxo,true); ///do not create if does not exit
+                    $returnTerm = wp_set_post_terms( $new_post_id,$list_terms , $key_taxo,false); ///do not create if does not exit
                 }
 
                 //update acfs
