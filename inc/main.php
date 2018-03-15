@@ -343,8 +343,6 @@ class wacimportcsv{
 
                 $html.= '</tr>'; 
             }
-
-
         }
 
         /////////////////
@@ -764,6 +762,8 @@ class wacimportcsv{
             foreach($list_decoded as $key_ls=>$ls){
                 echo '<tr class="modele" id="wac_'.$key_ls.'">';
 
+
+				
                 if(isset($_GET['details'])){
                     echo '<td class="modele_name has-row-actions column-primary">';
                     echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
@@ -773,7 +773,11 @@ class wacimportcsv{
                     echo '</div>';
                     echo '<button type="button" class="toggle-row"><span class="screen-reader-text">Afficher plus de détails</span></button>';
                     echo '</td>';
-                }
+                }else{
+					echo '<td class="modele_name has-row-actions column-primary">';
+					echo '<strong class="modele_title row-title">'.$key_ls.'</strong>';
+					echo '</td>';
+				}
 
                 echo '<td class="slug column-slug column-cpt" data-colname="Type de contenu">';
                 echo '<span>'.$ls['cpt'].'</span>';
@@ -834,7 +838,7 @@ class wacimportcsv{
             echo '<td>';
             echo '<select name="actionligneabsente">';
             echo '<option value="ignorerpost">Conserver le contenu existant</option>';
-            echo '<option value="deletepost">Supprimer le contenu existant</option>';
+            echo '<option value="deletepost">Envoyer le contenu dans la corbeille</option>';
             echo '</select>';
             echo '</td>';
             echo '</tr>';
