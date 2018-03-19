@@ -70,7 +70,7 @@ class wacimportcsv{
     }
 
     public function process_post(){
-
+		
         if(isset($_FILES["wacfilecsv"]["tmp_name"]) && $_FILES["wacfilecsv"]["tmp_name"]!=""){
             //get the options
             $list_urls = get_option($this->_list_save_name,false);
@@ -197,7 +197,7 @@ class wacimportcsv{
 
         $html = '';
 
-        $cols_list = $this->get_languages_cols();        
+        $cols_list = $this->get_languages_cols();	
         
         $html.= '<hr>';
         $html.= '<h2>Modifier le modèle d\'importation</h2>';
@@ -635,14 +635,32 @@ class wacimportcsv{
 
                         $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
                         if($subtaxo_value && $subtaxo_value!="" && $subtaxo_value!='notselected' &&$line[$subtaxo_value]!=""){
-                            $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
-                            if(isset($subterm_data->term_id) && $subterm_data->term_id){
-                                $list_terms[] = $subterm_data->term_id;
-                            }else{
-                                //$list_terms[] = $line[$subtaxo_value];
-                                //
-                                $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
-                            }
+							
+							$subtermid = false;
+							$subterm_data = get_terms( array(
+								'taxonomy'		=> 'type_boutiques',
+								'name'			=> 'Salons de thé',
+								'hierarchical'	=> true,
+								'hide_empty'	=> false
+							) );					
+							foreach($subterm_data as $subdata){
+								if(isset($subdata->parent) && $subdata->parent!=0 && $subdata->parent!="0"){
+									//this is it
+									$subtermid = $subdata->term_id;
+								}
+							}
+							if($subtermid){
+								$list_terms[] = $subtermid;
+							}else{
+								$message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
+							}
+							
+//                            $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
+//                            if(isset($subterm_data->term_id) && $subterm_data->term_id){
+//                                $list_terms[] = $subterm_data->term_id;
+//                            }else{
+//                                $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
+                            //}
                         }
 
                     }    
@@ -738,7 +756,7 @@ class wacimportcsv{
             $titreliendetails = "Détails";
             $detailsurl = add_query_arg( 'details', '1');
         }
-
+		
         echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.$detailsurl.'">('.$titreliendetails.')</a>';
         
         $list_urls = get_option($this->_list_save_name,false);
