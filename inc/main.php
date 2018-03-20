@@ -5,6 +5,7 @@ class wacimportcsv{
     private $_html_admin;
     private $_message_post_process;
     private $_wacmetakey = "yd_csv_import_line_id";
+	private $_list_assoc_language;
 
     public function __construct() {
 
@@ -476,6 +477,7 @@ class wacimportcsv{
         $delete_post = 0;
         //parse csvlines if no $this->_wacmetakey exist, create post
         $message_lines = array();
+		$this->_list_assoc_language = array();
         foreach($values as $line){
             
 			$association_list_language = $list_decoded[$key]['association'];
@@ -549,7 +551,7 @@ class wacimportcsv{
         $message = array();
 
         //loop for language
-        $list_assoc_language = array();
+        //$list_assoc_language = array();
 //        foreach($association_list_language as $language_slug=>$association_list){
             
             $data = array();
@@ -596,7 +598,7 @@ class wacimportcsv{
                     if(is_plugin_active('polylang/polylang.php')){
                         pll_set_post_language($new_post_id, $language_slug);
                         //array to save later to associate posts between them
-                        $list_assoc_language[$language_slug] = $new_post_id;
+                        $this->_list_assoc_language[$language_slug] = $new_post_id;
                     }
                 }
 
@@ -679,7 +681,7 @@ class wacimportcsv{
 
         if(is_plugin_active('polylang/polylang.php')){
             //after loop associate all posts between them
-            pll_save_post_translations($list_assoc_language);
+            pll_save_post_translations($this->_list_assoc_language);
         }
 
         return $message;
