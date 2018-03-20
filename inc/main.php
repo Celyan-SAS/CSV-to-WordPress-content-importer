@@ -639,7 +639,7 @@ class wacimportcsv{
 							$subtermid = false;
 							$subterm_data = get_terms( array(
 								'taxonomy'		=> 'type_boutiques',
-								'name'			=> 'Salons de thé',
+								'name'			=> $line[$subtaxo_value],
 								'hierarchical'	=> true,
 								'hide_empty'	=> false
 							) );					
