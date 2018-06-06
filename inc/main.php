@@ -935,7 +935,7 @@ class wacimportcsv{
             /** Option pour ne pas tenir compte des langues **/
             echo '<tr>';
             echo '<th>';
-            echo '<div>' . ( 'Ignorer les langues', 'importcsv' ) . '</div>';
+            echo '<div>' . __( 'Ignorer les langues', 'importcsv' ) . '</div>';
             echo '</th>';
             echo '<td>';
             echo '<label><input type="checkbox" name="ignorelang" id="ignorelang" value="1" /> Ignorer</label>';
