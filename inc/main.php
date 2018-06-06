@@ -104,6 +104,8 @@ class wacimportcsv{
             $list_decoded[$_POST['namesauvegarde']]['separatortype'] = $_POST['separatortype'];
             /* save first line */
             $list_decoded[$_POST['namesauvegarde']]['actionligneabsente'] = $_POST['actionligneabsente'];
+            /** Save ignore languages **/
+            $list_decoded[$_POST['namesauvegarde']]['ignorelang'] = $_POST['ignorelang'];
 
             /*reencode */
             $tosave = json_encode($list_decoded);
@@ -170,10 +172,11 @@ class wacimportcsv{
     /**
      * needs to return an array of languages slug/names
      */
-    public function get_languages_cols(){
+    public function get_languages_cols( $ignorelang=false ){
         $list = array();
+        
         //test if we have pll
-        if(is_plugin_active('polylang/polylang.php')){
+        if( !$ignorelang && is_plugin_active('polylang/polylang.php')){
             $pll_name = pll_languages_list(array('fields'=>'name'));
             $pll_slug = pll_languages_list(array('fields'=>'slug'));
             foreach($pll_name as $key=>$val){
@@ -194,11 +197,11 @@ class wacimportcsv{
     /*
      * Donne l'html tableau de modification des l'association col/champ
      */
-    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array()){
+    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array(),$ignorelang=false){
 
         $html = '';
 
-        $cols_list = $this->get_languages_cols();	
+        $cols_list = $this->get_languages_cols( $ignorelang );
         
         $html.= '<hr>';
         $html.= '<h2>Modifier le modèle d\'importation</h2>';
@@ -721,7 +724,7 @@ class wacimportcsv{
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
             $thedata = $list_decoded[$_POST['wacdoc']];
-            $return = $this->selectorfields($thedata['firstline'], $thedata['cpt'],$_POST['wacdoc'],$thedata['association']);            
+            $return = $this->selectorfields($thedata['firstline'], $thedata['cpt'],$_POST['wacdoc'],$thedata['association'],$thedata['ignorelang']);            
         }
 
         echo $return;
@@ -919,6 +922,16 @@ class wacimportcsv{
                 echo '<option value="'.$user->ID.'" '.$selected.'>'.$user->data->display_name.'</option>';
             }
             echo '</select>';
+            echo '</td>';
+            echo '</tr>';
+            
+            /** Option pour ne pas tenir compte des langues **/
+            echo '<tr>';
+            echo '<th>';
+            echo '<div>' . ( 'Ignorer les langues', 'importcsv' ) . '</div>';
+            echo '</th>';
+            echo '<td>';
+            echo '<label><input type="checkbox" name="ignorelang" id="ignorelang" value="1" /> Ignorer</label>';
             echo '</td>';
             echo '</tr>';
 
