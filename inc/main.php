@@ -205,6 +205,8 @@ class wacimportcsv{
     public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array(),$ignorelang=false){
 
         $html = '';
+        
+        $html .= '<pre>Ignorelang:' . print_r( $ignorelang, true ) . '</pre>';	//Debug
 
         $cols_list = $this->get_languages_cols( $ignorelang );
         
