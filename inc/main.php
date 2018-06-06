@@ -13,6 +13,11 @@ class wacimportcsv{
         if(!is_admin()){
             return;
         }
+        
+        /** Délai d'exécution illimité **/
+        ini_set('max_execution_time', 0);
+        set_time_limit(0);
+        
         add_action('admin_menu', array($this, 'importcsv_menu'));
 
         //add_action ('init',array($this,'process_post'));
@@ -617,63 +622,65 @@ class wacimportcsv{
                 /* add the postmeta of unique csv id */
                 update_post_meta( $new_post_id, $this->_wacmetakey, $unique_id_value);
 
-                //TAXOS                
-                foreach($association_list['taxonomie'] as $key_taxo=>$taxo_value){
-                    $list_terms = array();
-
-                    if($taxo_value == "notselected"){
-                        continue;
-                    }
-                    
-                    
-                    if($line[$taxo_value] && $line[$taxo_value]!=""){
-                        $term_data = get_term_by('name',$line[$taxo_value],$key_taxo);
-                        if(isset($term_data->term_id)){
-                            $list_terms[] = $term_data->term_id;
-                        }else{
-                            //$list_terms[] = $line[$taxo_value];
-                            $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$taxo_value]." n'as pas été trouvé<br>";
-                        }
-                    }
-
-                    if(isset($association_list['subtaxonomie'][$key_taxo])){
-
-                        $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
-                        if($subtaxo_value && $subtaxo_value!="" && $subtaxo_value!='notselected' &&$line[$subtaxo_value]!=""){
-							
-							$subtermid = false;
-							$subterm_data = get_terms( array(
-								'taxonomy'		=> 'type_boutiques',
-								'name'			=> $line[$subtaxo_value],
-								'hierarchical'	=> true,
-								'hide_empty'	=> false
-							) );					
-							foreach($subterm_data as $subdata){
-								if(isset($subdata->parent) && $subdata->parent!=0 && $subdata->parent!="0"){
-									//this is it
-									$subtermid = $subdata->term_id;
+                //TAXOS
+                if( !empty( $association_list['taxonomie'] ) && is_array( $association_list['taxonomie'] ) ) {
+	                foreach($association_list['taxonomie'] as $key_taxo=>$taxo_value){
+	                    $list_terms = array();
+	
+	                    if($taxo_value == "notselected"){
+	                        continue;
+	                    }
+	                    
+	                    
+	                    if($line[$taxo_value] && $line[$taxo_value]!=""){
+	                        $term_data = get_term_by('name',$line[$taxo_value],$key_taxo);
+	                        if(isset($term_data->term_id)){
+	                            $list_terms[] = $term_data->term_id;
+	                        }else{
+	                            //$list_terms[] = $line[$taxo_value];
+	                            $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$taxo_value]." n'as pas été trouvé<br>";
+	                        }
+	                    }
+	
+	                    if(isset($association_list['subtaxonomie'][$key_taxo])){
+	
+	                        $subtaxo_value = $association_list['subtaxonomie'][$key_taxo];
+	                        if($subtaxo_value && $subtaxo_value!="" && $subtaxo_value!='notselected' &&$line[$subtaxo_value]!=""){
+								
+								$subtermid = false;
+								$subterm_data = get_terms( array(
+									'taxonomy'		=> 'type_boutiques',
+									'name'			=> $line[$subtaxo_value],
+									'hierarchical'	=> true,
+									'hide_empty'	=> false
+								) );					
+								foreach($subterm_data as $subdata){
+									if(isset($subdata->parent) && $subdata->parent!=0 && $subdata->parent!="0"){
+										//this is it
+										$subtermid = $subdata->term_id;
+									}
 								}
-							}
-							if($subtermid){
-								$list_terms[] = $subtermid;
-							}else{
-								$message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
-							}
-							
-//                            $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
-//                            if(isset($subterm_data->term_id) && $subterm_data->term_id){
-//                                $list_terms[] = $subterm_data->term_id;
-//                            }else{
-//                                $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
-                            //}
-                        }
-
-                    }    
-
-                    //wp_set_object_terms( $new_post_id,$list_terms, $key_taxo,true); //create is doesn't exit NEED TO UNCOMENT THE LINES BEFORE
-                    $returnTerm = wp_set_post_terms( $new_post_id,$list_terms , $key_taxo,false); ///do not create if does not exit
+								if($subtermid){
+									$list_terms[] = $subtermid;
+								}else{
+									$message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
+								}
+								
+	//                            $subterm_data = get_term_by('name',$line[$subtaxo_value],$key_taxo);
+	//                            if(isset($subterm_data->term_id) && $subterm_data->term_id){
+	//                                $list_terms[] = $subterm_data->term_id;
+	//                            }else{
+	//                                $message[$new_post_id][] = "---TAXO : ".$key_taxo." - Terme ".$line[$subtaxo_value]." n'as pas été trouvé<br>";
+	                            //}
+	                        }
+	
+	                    }    
+	
+	                    //wp_set_object_terms( $new_post_id,$list_terms, $key_taxo,true); //create is doesn't exit NEED TO UNCOMENT THE LINES BEFORE
+	                    $returnTerm = wp_set_post_terms( $new_post_id,$list_terms , $key_taxo,false); ///do not create if does not exit
+	                }
                 }
-
+                
                 //update acfs
                 foreach($list_acf as $acf_key=>$acf_value){
                     update_field($acf_key, $acf_value, $new_post_id);
