@@ -601,6 +601,9 @@ class wacimportcsv{
 
             /* INSERT POST */            
             $new_post_id = $this->insert_post($data,$post_id_update);
+            
+            do_action( 'wpc_importcsv_newpost', $new_post_id, $list_acf );
+            
             if($new_post_id){
 
                 //set language if there is one;
