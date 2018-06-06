@@ -119,7 +119,7 @@ class wacimportcsv{
 
             //NEXT PART         
             if(isset($first_line)){
-                $this->selectorfields($first_line,$_POST['cptsave'],$_POST['namesauvegarde']);
+                $this->selectorfields($first_line,$_POST['cptsave'],$_POST['namesauvegarde'],null,$_POST['ignorelang']);
             }else{
                 //TODO return error
                 echo "<pre>", print_r("WHY?", 1), "</pre>";
