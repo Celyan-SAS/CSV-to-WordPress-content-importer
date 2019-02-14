@@ -265,8 +265,11 @@ class wacimportcsv{
             'id_unique'=>'Colonne identifiante',
             'post_title'=>'Post titre',
             'post_content'=>'Post content',
-            'post_category'=>'Post catégorie'
-        );
+            'post_category'=>'Post catégorie',
+			'post_date'=>'Post date', 
+			'post_date_gmt'=>'Post date gmt'
+        );	
+		
         foreach($array_list_fields_wp as $fieldkey=>$fieldname){
             //LINE -------------------------
             $html.= '<tr>';
@@ -497,9 +500,20 @@ class wacimportcsv{
 //die('STOP -- ');
 //            if($id_postmeta != "notselected"){
 								
-				$id_postmeta = $association_list['id_unique'];
-                $unique_id_value = md5($language_slug.'_'.$line[$id_postmeta]);
+//				echo "<pre>", print_r("TEST", 1), "</pre>";
+//				echo "<pre>", print_r($association_list['id_unique'], 1), "</pre>";
+//				echo "<pre>", print_r("line[id_postmeta]", 1), "</pre>";
+//				echo "<pre>", print_r($line[$id_postmeta], 1), "</pre>";
+//				echo "<pre>", print_r("line", 1), "</pre>";
+//				echo "<pre>", print_r($line, 1), "</pre>";
 				
+				$id_postmeta = $association_list['id_unique'];
+				$uniqueval_time = time();
+				if(isset($line[$id_postmeta])){
+					$uniqueval_time = $line[$id_postmeta];
+				}
+                $unique_id_value = md5($language_slug.'_'.$uniqueval_time);
+								
 //            }else{
 //                $unique_id_value = md5(implode('|',$line));
 //            }
@@ -580,11 +594,11 @@ class wacimportcsv{
                 //$association_list[$key_al] gives the key to seek
                 if(isset($line[$value_al])){
                     $data[$key_al] = $line[$value_al];
-                }
-
-                if(preg_match('#field_#', $key_al)){
-                    $key_al = str_replace('_text', '', $key_al);
-                    $list_acf[$key_al] = $line[$value_al];
+					
+					if(preg_match('#field_#', $key_al)){
+						$key_al = str_replace('_text', '', $key_al);
+						$list_acf[$key_al] = $line[$value_al];
+					}					
                 }
             }
 
@@ -592,13 +606,25 @@ class wacimportcsv{
             $data['post_status'] = $association_list['post_status'];
             $data['post_type'] = $list_decoded[$key]['cpt'];
             $data['author'] = $list_decoded[$key]['author'];
-
+			
             //if we want to send to the user "author" linked t the file
             //$user_author_data = get_userdata( $data['author'] );
             if(!isset($data['post_content']) || $data['post_content'] == ''){
                 $data['post_content'] = " ";
             }
-
+						
+			/** date if used **/
+			if(isset($association_list['post_date_gmt']) 
+				&& isset($line[$association_list['post_date_gmt']])
+			){
+				$data['post_date_gmt'] = $line[$association_list['post_date_gmt']];
+			}
+			if(isset($association_list['post_date']) 
+				&& isset($line[$association_list['post_date']])
+			){
+				$data['post_date'] = $line[$association_list['post_date']];
+			}
+			
             /* INSERT POST */            
             $new_post_id = $this->insert_post($data,$post_id_update);
             
@@ -709,9 +735,18 @@ class wacimportcsv{
         $new_post['post_status'] = $data['post_status'];
         $new_post['post_type'] = $data['post_type'];
         $new_post['post_content'] = $data['post_content'];
-
+		if(isset($data['post_date_gmt']) && $data['post_date_gmt'] != ''){
+			$new_post['post_date_gmt'] = $data['post_date_gmt'];
+		}
+		if(isset($data['post_date']) && $data['post_date_gmt'] != ''){
+			$new_post['post_date'] = $data['post_date'];
+			
+			echo "<pre>", print_r("qsfqsf", 1), "</pre>";
+echo "<pre>", print_r($new_post, 1), "</pre>";
+		}
+		
 		if(!$post_id_update){
-			$post_id = wp_insert_post( $new_post, true );
+			$post_id = wp_insert_post( $new_post, true );	
 		}else{
 			$new_post['ID'] = $post_id_update;
 			$post_id = $post_id_update;
