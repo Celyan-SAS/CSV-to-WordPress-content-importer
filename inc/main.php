@@ -740,9 +740,6 @@ class wacimportcsv{
 		}
 		if(isset($data['post_date']) && $data['post_date_gmt'] != ''){
 			$new_post['post_date'] = $data['post_date'];
-			
-			echo "<pre>", print_r("qsfqsf", 1), "</pre>";
-echo "<pre>", print_r($new_post, 1), "</pre>";
 		}
 		
 		if(!$post_id_update){
