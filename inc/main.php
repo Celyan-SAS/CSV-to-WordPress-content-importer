@@ -713,8 +713,11 @@ class wacimportcsv{
                 }
                 
                 //update acfs
-                foreach($list_acf as $acf_key=>$acf_value){
-                    update_field($acf_key, $acf_value, $new_post_id);
+                foreach($list_acf as $acf_key=>$acf_value){					
+					$acf_value = apply_filters('csvtowp_updatefield_value',$acf_value,$acf_key,$new_post_id);
+					if($acf_value != "csvtowp_cancel_update"){
+						update_field($acf_key, $acf_value, $new_post_id);
+					}
                 }
             }//end if new post
 
