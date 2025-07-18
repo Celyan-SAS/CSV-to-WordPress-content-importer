@@ -50,8 +50,11 @@ class wacimportcsv{
         $return_array = array();
         $row_count = 0;
         if (($handle = fopen($file, "r")) !== FALSE) {
+//var_dump( $file );
             while (($data = fgetcsv($handle, 0, $separatortype)) !== FALSE) {
-                $data = array_map("utf8_encode", $data); //added
+//var_dump( $data );
+//                $data = array_map("utf8_encode", $data); //added
+//var_dump( $data );
                 //zap x lines
                 if($startingline!=0 && $row_count<$startingline){
                     $row_count++;
@@ -71,7 +74,9 @@ class wacimportcsv{
                 }
             }
             fclose($handle);
-        }        
+        } else {
+		wp_die( 'fopen missed' );
+	}
         return $return_array;
     }
 
@@ -118,7 +123,7 @@ class wacimportcsv{
             update_option($this->_list_save_name,$tosave);
 
             //NEXT PART         
-            if(isset($first_line)){
+            if(!empty($first_line)){
                 $this->selectorfields($first_line,$_POST['cptsave'],$_POST['namesauvegarde'],null,$_POST['ignorelang']);
             }else{
                 //TODO return error
@@ -215,6 +220,8 @@ class wacimportcsv{
         $html.= '<div class="modif_modele_name"><strong>'.$namesauvegarde.'</strong></div>';
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
+
+var_dump( $titles );
 
 		$list_groups = acf_get_field_groups();
 		$fields_acf = false;
@@ -525,6 +532,19 @@ class wacimportcsv{
 				if(isset($postmeta_list[$unique_id_value])){
 					$post_id_update = $postmeta_list[$unique_id_value];
 				}
+
+/* DEBUG *
+echo "<pre>POST ID UPDATE dans import_data_from_csv:<br/>\n";
+var_dump( $post_id_update );
+echo "<br>unique_id_value dans import_data_from_csv:<br/>\n";
+var_dump( $unique_id_value );
+var_dump( $postmeta_list[$unique_id_value] );
+var_dump( $association_list['id_unique'] );
+var_dump( $line[0] );
+echo "</pre><br/>\n";
+/* */
+//$post_id_update = $line[0]; // PROVISOIRE IMPORTS MARQUES SUPPLEMENTAIRES YD 14/02/2022
+
 				
 				$message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value,$language_slug,$association_list,$post_id_update);
 				unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
@@ -573,6 +593,12 @@ class wacimportcsv{
     public function create_post($line,$list_decoded,$key,$unique_id_value,$language_slug,$association_list,$post_id_update=false){   
 
         $message = array();
+
+/* DEBUG *
+echo "POST ID UPDATE dans create_post:<br/>\n";
+var_dump( $post_id_update );
+exit;
+/* */
 
         //loop for language
         //$list_assoc_language = array();
@@ -626,7 +652,8 @@ class wacimportcsv{
 			}
 			
             /* INSERT POST */            
-            $new_post_id = $this->insert_post($data,$post_id_update);
+            $new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
+	    //$new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
             
             do_action( 'wpc_importcsv_newpost', $new_post_id, $list_acf );
             
