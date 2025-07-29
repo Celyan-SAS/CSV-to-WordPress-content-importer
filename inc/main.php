@@ -285,6 +285,9 @@ var_dump( $titles );
             $html.= '<td>';
             $html.= '<strong style="width: 250px;display: inline-block;">';
             $html.= $fieldname;
+            if( $fieldkey == 'id_unique' ){
+                $html.= '<br/><small>Laisser vide pour forcer la création du post.</small>';
+            }
             $html.= '</strong>';
             $html.= '</td>';
 
