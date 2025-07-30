@@ -221,7 +221,7 @@ class wacimportcsv{
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
 
-var_dump( $titles );
+//var_dump( $titles );
 
 		$list_groups = acf_get_field_groups();
 		$fields_acf = false;
@@ -535,6 +535,17 @@ var_dump( $titles );
 				if(isset($postmeta_list[$unique_id_value])){
 					$post_id_update = $postmeta_list[$unique_id_value];
 				}
+				
+				//2025-07-30 IMPORT update				
+				if($id_postmeta!=""){
+					if(isset($line[$id_postmeta])){
+						$post_id_update = $line[$id_postmeta];
+					}
+				}
+				
+//			echo "<pre>TEST -- association_list </pre>";
+//			echo "<pre>" . print_r($association_list, 1) . "</pre>";
+//			die();
 
 /* DEBUG *
 echo "<pre>POST ID UPDATE dans import_data_from_csv:<br/>\n";
@@ -549,7 +560,15 @@ echo "</pre><br/>\n";
 //$post_id_update = $line[0]; // PROVISOIRE IMPORTS MARQUES SUPPLEMENTAIRES YD 14/02/2022
 
 				
-				$message_lines = $this->create_post($line,$list_decoded,$key,$unique_id_value,$language_slug,$association_list,$post_id_update);
+				$message_lines = $this->create_post(
+													$line,
+													$list_decoded,
+													$key,
+													$unique_id_value,
+													$language_slug,
+													$association_list,
+													$post_id_update);
+				
 				unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
 //                $update_post++;
 //            }else{                
