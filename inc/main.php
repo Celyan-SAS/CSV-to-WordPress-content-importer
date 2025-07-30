@@ -844,7 +844,14 @@ exit;
         $list_urls = get_option($this->_list_save_name,false);
         
         $list_decoded = array();
-        if(count($list_urls)>0 && $list_urls!="" && isset($list_urls[0]) && $list_urls[0]!="" && $list_urls!="[]"){
+        if(
+			!empty($list_urls) 
+			&& count($list_urls)>0 
+			&& $list_urls!="" 
+			&& isset($list_urls[0]) 
+			&& $list_urls[0]!="" 
+			&& $list_urls!="[]"
+		){
             $list_decoded = json_decode($list_urls,true);
             echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
             echo '<thead>';
