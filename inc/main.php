@@ -674,8 +674,8 @@ exit;
 			}
 			
             /* INSERT POST */            
-            $new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
-	    //$new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
+            //$new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
+	    $new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
             
             do_action( 'wpc_importcsv_newpost', $new_post_id, $list_acf );
             
@@ -764,6 +764,7 @@ exit;
                 //update acfs
                 foreach($list_acf as $acf_key=>$acf_value){					
 					$acf_value = apply_filters('csvtowp_updatefield_value',$acf_value,$acf_key,$new_post_id);
+					
 					if($acf_value != "csvtowp_cancel_update"){
 						update_field($acf_key, $acf_value, $new_post_id);
 					}
