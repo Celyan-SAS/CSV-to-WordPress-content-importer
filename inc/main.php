@@ -674,8 +674,8 @@ exit;
 			}
 			
             /* INSERT POST */            
-            //$new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
-	    $new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
+        $new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
+	    //$new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
             
             do_action( 'wpc_importcsv_newpost', $new_post_id, $list_acf );
             
@@ -769,6 +769,9 @@ exit;
 						update_field($acf_key, $acf_value, $new_post_id);
 					}
                 }
+				
+				update_field('import_by_tool', date("Y-m-d H:i:s"), $new_post_id);
+				
             }//end if new post
 
         //}//end foreach language
