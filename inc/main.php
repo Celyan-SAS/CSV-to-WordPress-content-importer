@@ -207,7 +207,7 @@ class wacimportcsv{
     /*
      * Donne l'html tableau de modification des l'association col/champ
      */
-    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array(),$ignorelang=false){
+    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array(),$ignorelang=false,$thedatacomplete=false){
 
         $html = '';
         
@@ -448,9 +448,11 @@ class wacimportcsv{
         $html.= '<input value="'.$namesauvegarde.'" name="namesauvegarde" type="hidden">';
         $html.= '<input value="1" name="associatecptcolumn" type="hidden">';
 		
-		$html.= "<div style='display:none;'>";
-		
-		$html.= "</div>";
+		if(!empty($thedatacomplete['separatortype'])){
+			$html.= "<div style='color:red;'>";
+			$html.= "Attention le séparateur est :     ".$thedatacomplete['separatortype'];
+			$html.= "</div>";
+		}
 		
         $html.= '<input class="button button-primary maj_modele" type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
@@ -805,8 +807,8 @@ exit;
         $list_urls = get_option($this->_list_save_name,false); 
         if($list_urls){
             $list_decoded = json_decode($list_urls,true);
-            $thedata = $list_decoded[$_POST['wacdoc']];
-            $return = $this->selectorfields($thedata['firstline'], $thedata['cpt'],$_POST['wacdoc'],$thedata['association'],$thedata['ignorelang']);            
+            $thedata = $list_decoded[$_POST['wacdoc']];			
+            $return = $this->selectorfields($thedata['firstline'], $thedata['cpt'],$_POST['wacdoc'],$thedata['association'],$thedata['ignorelang'],$thedata);            
         }
 
         echo $return;
