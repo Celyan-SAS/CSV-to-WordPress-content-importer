@@ -420,7 +420,10 @@ class wacimportcsv{
 				foreach($cols_list as $keyppl=>$ppl_name){
 					$html.= '<td data-colname="'.$ppl_name.'">';
 					$default_value = "notselected";
-					if(isset($association_list[$keyppl]) && $association_list[$keyppl][$field_data['key']] !== null){
+					if(
+						!empty($association_list[$keyppl][$field_data['key']]) 
+						&& $association_list[$keyppl][$field_data['key']] !== null
+					){
 						$default_value = $association_list[$keyppl][$field_data['key']];
 					}
 
@@ -444,6 +447,11 @@ class wacimportcsv{
         $html.= '</div>';
         $html.= '<input value="'.$namesauvegarde.'" name="namesauvegarde" type="hidden">';
         $html.= '<input value="1" name="associatecptcolumn" type="hidden">';
+		
+		$html.= "<div style='display:none;'>";
+		
+		$html.= "</div>";
+		
         $html.= '<input class="button button-primary maj_modele" type="submit" value="Mettre à jour le modèle">';
         $html.= '</form>';
 
@@ -502,64 +510,25 @@ class wacimportcsv{
         $message_lines = array();
 		$this->_list_assoc_language = array();
         foreach($values as $line){
-            
+            			
 			$association_list_language = $list_decoded[$key]['association'];
 			foreach($association_list_language as $language_slug=>$association_list){
-//echo "<pre>", print_r("HERE", 1), "</pre>";
-//echo "<pre>", print_r($id_postmeta, 1), "</pre>";
-//die('STOP -- ');
-//            if($id_postmeta != "notselected"){
-								
-//				echo "<pre>", print_r("TEST", 1), "</pre>";
-//				echo "<pre>", print_r($association_list['id_unique'], 1), "</pre>";
-//				echo "<pre>", print_r("line[id_postmeta]", 1), "</pre>";
-//				echo "<pre>", print_r($line[$id_postmeta], 1), "</pre>";
-//				echo "<pre>", print_r("line", 1), "</pre>";
-//				echo "<pre>", print_r($line, 1), "</pre>";
 				
+				//ID dans le tableau (POSITION COLONNE, pas l'id du post)
 				$id_postmeta = $association_list['id_unique'];
 				$uniqueval_time = time();
 				if(isset($line[$id_postmeta])){
 					$uniqueval_time = $line[$id_postmeta];
+					$the_WP_post_id = $line[$id_postmeta];
 				}
                 $unique_id_value = md5($language_slug.'_'.$uniqueval_time);
-								
-//            }else{
-//                $unique_id_value = md5(implode('|',$line));
-//            }
-
-            //if(isset($postmeta_list[$unique_id_value]) && $postmeta_list[$unique_id_value]!=""){
-                //continue;
+						
 				//Update line
 				$post_id_update = false;
 				if(isset($postmeta_list[$unique_id_value])){
 					$post_id_update = $postmeta_list[$unique_id_value];
 				}
-				
-				//2025-07-30 IMPORT update				
-				if($id_postmeta!=""){
-					if(isset($line[$id_postmeta])){
-						$post_id_update = $line[$id_postmeta];
-					}
-				}
-				
-//			echo "<pre>TEST -- association_list </pre>";
-//			echo "<pre>" . print_r($association_list, 1) . "</pre>";
-//			die();
-
-/* DEBUG *
-echo "<pre>POST ID UPDATE dans import_data_from_csv:<br/>\n";
-var_dump( $post_id_update );
-echo "<br>unique_id_value dans import_data_from_csv:<br/>\n";
-var_dump( $unique_id_value );
-var_dump( $postmeta_list[$unique_id_value] );
-var_dump( $association_list['id_unique'] );
-var_dump( $line[0] );
-echo "</pre><br/>\n";
-/* */
-//$post_id_update = $line[0]; // PROVISOIRE IMPORTS MARQUES SUPPLEMENTAIRES YD 14/02/2022
-
-				
+									
 				$message_lines = $this->create_post(
 													$line,
 													$list_decoded,
@@ -567,7 +536,7 @@ echo "</pre><br/>\n";
 													$unique_id_value,
 													$language_slug,
 													$association_list,
-													$post_id_update);
+													$the_WP_post_id);
 				
 				unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
 //                $update_post++;
@@ -577,6 +546,7 @@ echo "</pre><br/>\n";
                 $ajout_post++;
 //}
 			}//end foreach language
+			
 //break;//ONLY FOR TEST
         }
 		
@@ -673,10 +643,10 @@ exit;
 				$data['post_date'] = $line[$association_list['post_date']];
 			}
 			
-            /* INSERT POST */            
-        $new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
-	    //$new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
-            
+            /* INSERT POST */   
+			$new_post_id = $this->insert_post($data,$post_id_update);	// PROVISOIREMENT COMMENTE YD 14/02/2022
+			//$new_post_id = $post_id_update;				// PROVISOIRE YD 14/02/2022
+			
             do_action( 'wpc_importcsv_newpost', $new_post_id, $list_acf );
             
             if($new_post_id){
@@ -786,32 +756,44 @@ exit;
 
     public function insert_post($data,$post_id_update=false){
         $new_post = array();
-        $new_post['post_title'] = $data['post_title'];
-        $new_post['post_author'] = $data['author'];
-        $new_post['post_status'] = $data['post_status'];
-        $new_post['post_type'] = $data['post_type'];
-        $new_post['post_content'] = $data['post_content'];
-		if(isset($data['post_date_gmt']) && $data['post_date_gmt'] != ''){
+		if(!empty($data['post_title'])){
+			$new_post['post_title'] = $data['post_title'];
+		}
+		if(!empty($data['post_author'])){
+			$new_post['post_author'] = $data['post_author'];
+		}
+		if(!empty($data['post_status']) && $data['post_status']!="notselected"){
+			$new_post['post_status'] = $data['post_status'];
+		}
+		if(!empty($data['post_type'])){
+			$new_post['post_type'] = $data['post_type'];
+		}
+		if(!empty($data['post_content']) && trim($data['post_content'])!=""){
+			$new_post['post_content'] = $data['post_content'];
+		}		
+		if(!empty($data['post_date_gmt'])){
 			$new_post['post_date_gmt'] = $data['post_date_gmt'];
 		}
-		if(isset($data['post_date']) && $data['post_date_gmt'] != ''){
+		if(!empty($data['post_date'])){
 			$new_post['post_date'] = $data['post_date'];
 		}
-		
-		if(!$post_id_update){
+				
+		if(!$post_id_update){			
 			$post_id = wp_insert_post( $new_post, true );	
-		}else{
+			
+		}else{		
 			$new_post['ID'] = $post_id_update;
 			$post_id = $post_id_update;
-			wp_update_post( $new_post, true );
+			$upa = wp_update_post( $new_post, true );		
+			
 		}
         $error_html = '';
         if (is_wp_error($post_id)) {
             $errors = $post_id->get_error_messages();
             foreach ($errors as $error) {
-                //$error_html.=$error;
-                //echo $error;
-                //todo renvoyer un message d'erreur
+                $error_html.=$error;
+                echo $error;
+                //todo renvoyer un message d'erreur				
             }
             return false; //$error_html;
         }
@@ -867,13 +849,10 @@ exit;
         $list_urls = get_option($this->_list_save_name,false);
         
         $list_decoded = array();
+				
         if(
-			!empty($list_urls) 
-			&& count($list_urls)>0 
-			&& $list_urls!="" 
-			&& isset($list_urls[0]) 
-			&& $list_urls[0]!="" 
-			&& $list_urls!="[]"
+			!empty($list_urls)
+			&& $list_urls != "[]"
 		){
             $list_decoded = json_decode($list_urls,true);
             echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
