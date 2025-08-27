@@ -872,8 +872,6 @@ exit;
             $count_line_save = 0;
             foreach($list_decoded as $key_ls=>$ls){
                 echo '<tr class="modele" id="wac_'.$key_ls.'">';
-
-
 				
                 if(isset($_GET['details'])){
                     echo '<td class="modele_name has-row-actions column-primary">';
@@ -902,7 +900,7 @@ exit;
                     echo '<div style="display: inline-block;"><input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'"></div>';
                     echo '<div style="display: inline-block;"><input class="button-primary" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Importer" style="display:none;"></div>';
                 echo '</form>';
-
+				
                 echo '</td>';
                 echo '</tr>';
                 $count_line_save++;
