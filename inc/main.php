@@ -519,6 +519,7 @@ class wacimportcsv{
 				//ID dans le tableau (POSITION COLONNE, pas l'id du post)
 				$id_postmeta = $association_list['id_unique'];
 				$uniqueval_time = time();
+				$the_WP_post_id = false;
 				if(isset($line[$id_postmeta])){
 					$uniqueval_time = $line[$id_postmeta];
 					$the_WP_post_id = $line[$id_postmeta];
