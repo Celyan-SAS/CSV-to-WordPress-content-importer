@@ -216,7 +216,7 @@ class wacimportcsv{
         $cols_list = $this->get_languages_cols( $ignorelang );
         
         $html.= '<hr>';
-        $html.= '<h2>Modifier le modèle d\'importation</h2>';
+        $html.= "<h2>Modifier le modèle d'importation</h2>";
         $html.= '<div class="modif_modele_name"><strong>'.$namesauvegarde.'</strong></div>';
         $html.= '<form action="" method="POST" enctype="multipart/form-data">';
         $html.= '<div>';
@@ -847,7 +847,8 @@ exit;
             $detailsurl = add_query_arg( 'details', '1');
         }
 		
-        echo '<h2 style="display:inline-block;">Modèles d\'importation</h2>&nbsp;<a href="'.$detailsurl.'">('.$titreliendetails.')</a>';
+        echo "<h2 style='display:inline-block;'>Modèles dimportation</h2>&nbsp;";
+		echo '<a href="'.$detailsurl.'">('.$titreliendetails.')</a>';
         
         $list_urls = get_option($this->_list_save_name,false);
         
