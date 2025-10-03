@@ -38,7 +38,12 @@ class wacimportcsv{
 
     public function wacimportcsv_scripts_enqueue(){
         wp_enqueue_script('jquery');
-        wp_enqueue_script('wacreadcsvdocument', plugins_url('/js/wac_importcsv_admin.js', dirname(__FILE__)), array('jquery'), '0.0.1', false);
+        wp_enqueue_script('wacreadcsvdocument', 
+			plugins_url('/js/wac_importcsv_admin.js', 
+			dirname(__FILE__)), array('jquery'), 
+			'0.0.2', 
+			false
+		);
     }
     public function wacimportcsv_css_enqueue(){
         wp_register_style('style_csv', plugins_url('/css/style_csv.css', dirname(__FILE__)), array(), '1.0.1', 'all');
@@ -101,22 +106,32 @@ class wacimportcsv{
                 $first_line = $dfl;
                 break;
             }
-            
+			
+			$nom_sans_slashes_quotes = str_replace(array('/', '"'), '', $_POST['namesauvegarde']);
+			            
             /* STARTING LINE */
-            $list_decoded[$_POST['namesauvegarde']]['startline'] = $_POST['startline'];
+            $list_decoded[$nom_sans_slashes_quotes]['startline'] = $_POST['startline'];
             /* SAVE AUTHOR */
-            $list_decoded[$_POST['namesauvegarde']]['author'] = $_POST['authorsave'];
+            $list_decoded[$nom_sans_slashes_quotes]['author'] = $_POST['authorsave'];
             /* SAVE CPT */
-            $list_decoded[$_POST['namesauvegarde']]['cpt'] = $_POST['cptsave'];
+            $list_decoded[$nom_sans_slashes_quotes]['cpt'] = $_POST['cptsave'];
             /* save first line */
-            $list_decoded[$_POST['namesauvegarde']]['firstline'] = $first_line;
+            $list_decoded[$nom_sans_slashes_quotes]['firstline'] = $first_line;
             /* save first line */
-            $list_decoded[$_POST['namesauvegarde']]['separatortype'] = $_POST['separatortype'];
+            $list_decoded[$nom_sans_slashes_quotes]['separatortype'] = $_POST['separatortype'];
             /* save first line */
-            $list_decoded[$_POST['namesauvegarde']]['actionligneabsente'] = $_POST['actionligneabsente'];
+            $list_decoded[$nom_sans_slashes_quotes]['actionligneabsente'] = $_POST['actionligneabsente'];
             /** Save ignore languages **/
-            $list_decoded[$_POST['namesauvegarde']]['ignorelang'] = $_POST['ignorelang'];
+			if(!empty($_POST['ignorelang'])){
+				$list_decoded[$nom_sans_slashes_quotes]['ignorelang'] = $_POST['ignorelang'];
+				$ignorelang = $_POST['ignorelang'];
+			}else{
+				$list_decoded[$nom_sans_slashes_quotes]['ignorelang'] = "";
+				$ignorelang = "";
+			}
 
+			$list_decoded = apply_filters('csvtowp_save_template_data',$list_decoded);
+			
             /*reencode */
             $tosave = json_encode($list_decoded);
             /*save*/
@@ -124,7 +139,13 @@ class wacimportcsv{
 
             //NEXT PART         
             if(!empty($first_line)){
-                $this->selectorfields($first_line,$_POST['cptsave'],$_POST['namesauvegarde'],null,$_POST['ignorelang']);
+                $this->selectorfields(
+					$first_line,
+					$_POST['cptsave'],
+					$nom_sans_slashes_quotes,
+					null,
+					$ignorelang
+				);
             }else{
                 //TODO return error
                 echo "<pre>", print_r("WHY?", 1), "</pre>";
@@ -136,7 +157,7 @@ class wacimportcsv{
         if(isset($_POST['associatecptcolumn']) && $_POST['associatecptcolumn']!=""){
 
             $alldata = $_POST;
-            $name_index = $_POST['namesauvegarde'];
+			$nom_sans_slashes_quotes = str_replace(array('/', '"'), '', $_POST['namesauvegarde']);
             unset($alldata['associatecptcolumn']);
             unset($alldata['namesauvegarde']);
 
@@ -166,7 +187,7 @@ class wacimportcsv{
             if($list_urls){
                 $list_decoded = json_decode($list_urls,true);
             }
-            $list_decoded[$name_index]['association'] = $to_save_data;
+            $list_decoded[$nom_sans_slashes_quotes]['association'] = $to_save_data;
             /*reencode */
             $tosave = json_encode($list_decoded);
             /*save*/
@@ -207,7 +228,14 @@ class wacimportcsv{
     /*
      * Donne l'html tableau de modification des l'association col/champ
      */
-    public function selectorfields($titles,$cptlinked,$namesauvegarde,$association_list = array(),$ignorelang=false,$thedatacomplete=false){
+    public function selectorfields(
+		$titles,
+		$cptlinked,
+		$namesauvegarde,
+		$association_list = array(),
+		$ignorelang=false,
+		$thedatacomplete=false
+	){
 
         $html = '';
         
@@ -539,7 +567,9 @@ class wacimportcsv{
 													$unique_id_value,
 													$language_slug,
 													$association_list,
-													$the_WP_post_id);
+													$data_save,
+													$the_WP_post_id
+													);
 				
 				unset($postmeta_list[$unique_id_value]); //virer du tableau ceux qui on été trouvé pour finir avec ceux qui n'ont pas été ajoutés
 //                $update_post++;
@@ -585,7 +615,16 @@ class wacimportcsv{
         $t = wp_mail($to,$subject,$message,$headers);
     }
 	
-    public function create_post($line,$list_decoded,$key,$unique_id_value,$language_slug,$association_list,$post_id_update=false){   
+    public function create_post(
+		$line,
+		$list_decoded,
+		$key,
+		$unique_id_value,
+		$language_slug,
+		$association_list,
+		$data_save,
+		$post_id_update=false
+	){   
 
         $message = array();
 
@@ -736,10 +775,10 @@ exit;
                 
                 //update acfs
                 foreach($list_acf as $acf_key=>$acf_value){					
-					$acf_value = apply_filters('csvtowp_updatefield_value',$acf_value,$acf_key,$new_post_id);
+					$acf_value = apply_filters('csvtowp_updatefield_value',$acf_value,$acf_key,$new_post_id,$data_save);
 					
 					if($acf_value != "csvtowp_cancel_update"){
-						update_field($acf_key, $acf_value, $new_post_id);
+						$updated = update_field($acf_key, $acf_value, $new_post_id);												
 					}
                 }
 				
@@ -859,6 +898,7 @@ exit;
 			&& $list_urls != "[]"
 		){
             $list_decoded = json_decode($list_urls,true);
+			
             echo '<table class="modeles_liste wp-list-table widefat fixed striped posts">';
             echo '<thead>';
             echo '<tr class="manage-column column-title column-primary">';
@@ -877,10 +917,10 @@ exit;
 				
                 if(isset($_GET['details'])){
                     echo '<td class="modele_name has-row-actions column-primary">';
-                    echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'.$key_ls.'</strong>';
+                    echo '<strong class="modele_title row-title" onClick="jQuery(\'#wac_edit_save\').click()">'. htmlspecialchars($key_ls, ENT_QUOTES, 'UTF-8').'</strong>';
                     echo '<div class="row-actions">';
-                    echo '<span class="edit"><input type="button" value="Modifier" id="wac_edit_save" data-li="'.$key_ls.'"> | </span>';
-                    echo '<span class="trash"><input type="button" value="Supprimer" id="wac_delete_save" data-li="'.$key_ls.'"></span>';
+                    echo '<span class="edit"><input type="button" value="Modifier" id="wac_edit_save" data-li="'.htmlspecialchars($key_ls, ENT_QUOTES, 'UTF-8').'"> | </span>';
+                    echo '<span class="trash"><input type="button" value="Supprimer" id="wac_delete_save" data-li="'.htmlspecialchars($key_ls, ENT_QUOTES, 'UTF-8').'"></span>';
                     echo '</div>';
                     echo '<button type="button" class="toggle-row"><span class="screen-reader-text">Afficher plus de détails</span></button>';
                     echo '</td>';
@@ -892,6 +932,7 @@ exit;
 
                 echo '<td class="slug column-slug column-cpt" data-colname="Type de contenu">';
                 echo '<span>'.$ls['cpt'].'</span>';
+				
                 echo '</td>';
                 echo '<td class="column-action" data-colname="Action">';
                 echo '<input class="button" type="button" value="Fichier..." id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;line-height: 15px;">';
@@ -1022,6 +1063,9 @@ exit;
             echo '<label><input type="checkbox" name="ignorelang" id="ignorelang" value="1" /> Ignorer</label>';
             echo '</td>';
             echo '</tr>';
+						
+			$acf_value = apply_filters('csvtowp_ajout_options_template',"");
+			echo $acf_value;
 
             echo '<tr>';
             echo '<th>';

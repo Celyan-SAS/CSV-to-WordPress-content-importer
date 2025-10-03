@@ -45,8 +45,9 @@
         };
         
         $.post(ajaxurl, data, function(theajaxresponse) {
-            var target = $(element).attr('data-li');
-            $('#wac_'+target).hide();
+            //var target = $(element).attr('data-li');
+            //$('#wac_'+target).hide();
+			$(element).closest('tr').hide();			
             $('#html_admin_assoc_cpt').html('');
         })
         .fail(function() {
