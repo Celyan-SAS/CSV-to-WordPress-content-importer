@@ -41,7 +41,7 @@ class wacimportcsv{
         wp_enqueue_script('wacreadcsvdocument', 
 			plugins_url('/js/wac_importcsv_admin.js', 
 			dirname(__FILE__)), array('jquery'), 
-			'0.0.2', 
+			'1.0.0', 
 			false
 		);
     }
