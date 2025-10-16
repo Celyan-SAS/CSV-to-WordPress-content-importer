@@ -782,7 +782,7 @@ exit;
 					}
                 }
 				
-				update_field('import_by_tool', date("Y-m-d H:i:s"), $new_post_id);
+				
 				
             }//end if new post
 
@@ -821,7 +821,9 @@ exit;
 		}
 				
 		if(!$post_id_update){			
-			$post_id = wp_insert_post( $new_post, true );	
+			$post_id = wp_insert_post( $new_post, true );
+			
+			update_field('import_by_tool', date("Y-m-d H:i:s"), $post_id);
 			
 		}else{		
 			$new_post['ID'] = $post_id_update;
