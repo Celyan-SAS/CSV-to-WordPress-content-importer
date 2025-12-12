@@ -193,11 +193,42 @@ class wacimportcsv{
             /*save*/
             update_option($this->_list_save_name,$tosave);
         }
+		
+		
+		if (isset($_FILES['wacfilecsvprocess']) && $_FILES['wacfilecsvprocess']['error'] === UPLOAD_ERR_OK) {
+			$file_info = $_FILES['wacfilecsvprocess'];
+			$file_tmp_name = $file_info['tmp_name'];
+
+			// 1. Définir les types MIME réellement attendus
+			$expected_mime_types = [
+				'text/plain', // Souvent le résultat pour les CSV purs
+				'text/csv',
+				'application/csv'
+			];
+
+			// 2. Utiliser la librairie Fileinfo pour déterminer le type MIME réel
+			$finfo = finfo_open(FILEINFO_MIME_TYPE);
+			$real_mime_type = finfo_file($finfo, $file_tmp_name);
+			finfo_close($finfo);
+
+			// 3. Obtenir l'extension du nom de fichier pour une double vérification
+			$file_extension = strtolower(pathinfo($file_info['name'], PATHINFO_EXTENSION));
+
+			// TEST FINAL
+			if (in_array($real_mime_type, $expected_mime_types) && $file_extension === 'csv') {
+				// Le fichier est un CSV et son type MIME réel correspond
+				$this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave']);
+			} else {
+				// Le type MIME ou l'extension ne correspond pas au format CSV
+				echo "Erreur : Le fichier doit être au format CSV (Type réel : " . $real_mime_type . ").";
+			}
+		}
+		
 
         /* TEST IMPORT */
-        if(isset($_FILES['wacfilecsvprocess']["tmp_name"]) && $_FILES['wacfilecsvprocess']["tmp_name"]!=""){
-            $this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave']);
-        }        
+//        if(isset($_FILES['wacfilecsvprocess']["tmp_name"]) && $_FILES['wacfilecsvprocess']["tmp_name"]!=""){
+//            $this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave']);
+//        }        
     }    
     
     /**
