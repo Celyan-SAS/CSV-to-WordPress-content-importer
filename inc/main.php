@@ -937,11 +937,24 @@ exit;
 				
                 echo '</td>';
                 echo '<td class="column-action" data-colname="Action">';
-                echo '<input class="button" type="button" value="Fichier..." id="wac_processfile'.$count_line_save.'" data-input="'.$count_line_save.'" data-li="'.$key_ls.'" style="width:150px;height:30px;line-height: 15px;">';
+                echo '<input '
+				. 'class="button" '
+				. 'type="button" '
+				  . 'value="Fichier..." '
+				  . 'id="wac_processfile'.$count_line_save.'" '
+				  . 'data-input="'.$count_line_save.'" '
+				  . 'data-li="'.$key_ls.'" '
+				  . 'style="width:150px;height:30px;line-height: 15px;">';
 
                 //form
                 echo '<form action="" method="POST" enctype="multipart/form-data" style="display: inline-block;">';
-                    echo '<input type="file" id="wac_processfile_input'.$count_line_save.'" name="wacfilecsvprocess" style="display:none;">';
+                    echo '<input '
+						. 'type="file" '
+						. 'id="wac_processfile_input'.$count_line_save.'" '
+						. 'name="wacfilecsvprocess" '
+						. 'style="display:none;" '
+						. 'accept="text/csv" '
+						. '>';
                     echo '<div style="display: inline-block;"><input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'"></div>';
                     echo '<div style="display: inline-block;"><input class="button-primary" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Importer" style="display:none;"></div>';
                 echo '</form>';
