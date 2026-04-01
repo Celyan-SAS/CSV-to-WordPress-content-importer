@@ -41,7 +41,7 @@ class wacimportcsv{
         wp_enqueue_script('wacreadcsvdocument', 
 			plugins_url('/js/wac_importcsv_admin.js', 
 			dirname(__FILE__)), array('jquery'), 
-			'1.0.0', 
+			'1.0.2', 
 			false
 		);
     }
@@ -50,16 +50,21 @@ class wacimportcsv{
         wp_enqueue_style('style_csv'); // Enqueue it!
     }
 
-    public function read_csv($file,$startingline,$separatortype=",",$limitline = 0){
+    public function read_csv($file,$startingline,$separatortype=",",$limitline = 0,$encoding="UTF-8"){
 
         $return_array = array();
         $row_count = 0;
         if (($handle = fopen($file, "r")) !== FALSE) {
-//var_dump( $file );
+
             while (($data = fgetcsv($handle, 0, $separatortype)) !== FALSE) {
-//var_dump( $data );
-//                $data = array_map("utf8_encode", $data); //added
-//var_dump( $data );
+                if ($encoding !== 'UTF-8') {
+//                    foreach ($data as $k => $v) {
+//                        $data[$k] = mb_convert_encoding($v, 'UTF-8', $encoding);
+//                    }
+					$data = array_map("utf8_encode", $data); //added
+                }
+				
+
                 //zap x lines
                 if($startingline!=0 && $row_count<$startingline){
                     $row_count++;
@@ -217,7 +222,8 @@ class wacimportcsv{
 			// TEST FINAL
 			if (in_array($real_mime_type, $expected_mime_types) && $file_extension === 'csv') {
 				// Le fichier est un CSV et son type MIME réel correspond
-				$this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave']);
+				$encoding = isset($_POST['wacfilecsv_encoding']) ? $_POST['wacfilecsv_encoding'] : 'UTF-8';
+				$this->import_data_from_csv($_FILES['wacfilecsvprocess']["tmp_name"],$_POST['wacfilecsv_namesave'], $encoding);
 			} else {
 				// Le type MIME ou l'extension ne correspond pas au format CSV
 				echo "Erreur : Le fichier doit être au format CSV (Type réel : " . $real_mime_type . ").";
@@ -533,7 +539,7 @@ class wacimportcsv{
         add_menu_page($page_title, $menu_title, $capability, $menu_slug, $function, $icon_url);
     }
 
-    public function import_data_from_csv($file,$key){
+    public function import_data_from_csv($file,$key,$encoding='UTF-8'){
 
         //get data from key
         $list_urls = get_option($this->_list_save_name,false);
@@ -541,7 +547,7 @@ class wacimportcsv{
         $data_save = $list_decoded[$key];
 
         $startline = $data_save['startline'];
-        $values = $this->read_csv($file,$startline,$data_save['separatortype'],"all");
+        $values = $this->read_csv($file,$startline,$data_save['separatortype'],"all",$encoding);
 
         //get all the keys to check witch one exist already
         global $wpdb;
@@ -987,8 +993,10 @@ exit;
 						. 'accept="text/csv" '
 						. '>';
                     echo '<div style="display: inline-block;"><input type="hidden" name="wacfilecsv_namesave" value="'.$key_ls.'"></div>';
+                    echo '<input type="hidden" id="wac_encoding_input'.$count_line_save.'" name="wacfilecsv_encoding" value="UTF-8">';
                     echo '<div style="display: inline-block;"><input class="button-primary" type="submit" id="wac_processfile_button'.$count_line_save.'" value="Importer" style="display:none;"></div>';
                 echo '</form>';
+				echo '<div id="wac_encoding_result'.$count_line_save.'" style="margin-top:8px;font-size:12px;line-height:1.5;"></div>';
 				
                 echo '</td>';
                 echo '</tr>';
